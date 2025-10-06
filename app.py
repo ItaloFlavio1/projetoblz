@@ -20,7 +20,6 @@ from flask import (
 )
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import or_
-from weasyprint import HTML
 from flask_login import (
     LoginManager,
     UserMixin,
@@ -405,39 +404,138 @@ def delete_user(user_id: int):
 @app.route("/export/pesquisa/pdf")
 @login_required
 def export_pesquisa_pdf():
+    """Versão simplificada sem PDF"""
     base_query = Equipamento.query
     query_com_filtros = get_filtered_equipamentos_query(base_query)
     resultados = query_com_filtros.order_by(Equipamento.id.desc()).all()
-    html = render_template("relatorio_pesquisa_pdf.html", equipamentos=resultados, now=get_brasil_datetime())
-    pdf = HTML(string=html).write_pdf()
-    response = make_response(pdf)
-    response.headers["Content-Type"] = "application/pdf"
-    response.headers["Content-Disposition"] = f'inline; filename=relatorio_pesquisa_{date.today()}.pdf'
+    
+    # Gera HTML em vez de PDF
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Relatório de Equipamentos</title>
+        <style>
+            body {{ font-family: Arial; margin: 20px; }}
+            h1 {{ color: #333; text-align: center; }}
+            table {{ width: 100%; border-collapse: collapse; margin: 20px 0; }}
+            th, td {{ border: 1px solid #ddd; padding: 10px; text-align: left; }}
+            th {{ background-color: #f5f5f5; }}
+            .header {{ text-align: center; margin-bottom: 30px; }}
+            .footer {{ margin-top: 30px; font-size: 12px; color: #666; }}
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>RELATÓRIO DE EQUIPAMENTOS</h1>
+            <p>Data: {datetime.now().strftime('%d/%m/%Y %H:%M')}</p>
+            <p>Total de equipamentos: {len(resultados)}</p>
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Serial</th>
+                    <th>Tipo</th>
+                    <th>Modelo</th>
+                    <th>Status</th>
+                    <th>Data Cadastro</th>
+                </tr>
+            </thead>
+            <tbody>
+                {"".join([f'''
+                <tr>
+                    <td>{eq.serial}</td>
+                    <td>{eq.tipo}</td>
+                    <td>{eq.modelo}</td>
+                    <td>{eq.status_atual}</td>
+                    <td>{eq.data_cadastro.strftime('%d/%m/%Y')}</td>
+                </tr>
+                ''' for eq in resultados])}
+            </tbody>
+        </table>
+        
+        <div class="footer">
+            <p>Relatório gerado pelo Sistema de Controle de Testes</p>
+            <p><strong>Dica:</strong> Use Ctrl+P para imprimir ou salvar como PDF</p>
+        </div>
+    </body>
+    </html>
+    """
+    
+    response = make_response(html_content)
+    response.headers["Content-Type"] = "text/html; charset=utf-8"
+    response.headers["Content-Disposition"] = f"attachment; filename=relatorio_equipamentos_{date.today()}.html"
     return response
 
 @app.route("/historico/<int:equip_id>/export/pdf")
 @login_required
 def export_historico_pdf(equip_id: int):
+    """Versão simplificada sem PDF"""
     equipamento = Equipamento.query.get_or_404(equip_id)
     testes_ordenados = sorted(equipamento.testes, key=lambda t: t.data_teste)
-    historico_processado, data_anterior = [], equipamento.data_cadastro or get_brasil_datetime()
-
-    for teste in testes_ordenados:
-        duracao = teste.data_teste - data_anterior
-        historico_processado.append({"teste": teste, "tempo_em_campo": format_timedelta(duracao)})
-        data_anterior = teste.data_teste
-
-    historico_processado.reverse()
-    html = render_template(
-        "relatorio_historico_pdf.html",
-        equipamento=equipamento,
-        historico=historico_processado,
-        now=get_brasil_datetime(),
-    )
-    pdf = HTML(string=html).write_pdf()
-    response = make_response(pdf)
-    response.headers["Content-Type"] = "application/pdf"
-    response.headers["Content-Disposition"] = f'inline; filename=historico_{equipamento.serial}.pdf'
+    
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Histórico - {equipamento.serial}</title>
+        <style>
+            body {{ font-family: Arial; margin: 20px; }}
+            h1 {{ color: #333; }}
+            .info {{ background: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0; }}
+            table {{ width: 100%; border-collapse: collapse; }}
+            th, td {{ border: 1px solid #ddd; padding: 10px; text-align: left; }}
+            th {{ background-color: #f5f5f5; }}
+        </style>
+    </head>
+    <body>
+        <h1>HISTÓRICO DE TESTES</h1>
+        
+        <div class="info">
+            <h3>Equipamento: {equipamento.serial}</h3>
+            <p><strong>Tipo:</strong> {equipamento.tipo}</p>
+            <p><strong>Modelo:</strong> {equipamento.modelo}</p>
+            <p><strong>Status Atual:</strong> {equipamento.status_atual}</p>
+        </div>
+        
+        <h3>Testes Realizados ({len(testes_ordenados)})</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Status</th>
+                    <th>Velocidade</th>
+                    <th>Sinal</th>
+                    <th>Observações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {"".join([f'''
+                <tr>
+                    <td>{teste.data_teste.strftime('%d/%m/%Y %H:%M')}</td>
+                    <td>{teste.status}</td>
+                    <td>{teste.velocidade_teste or '-'}</td>
+                    <td>{teste.sinal_dbm or '-'}</td>
+                    <td>{teste.observacoes or '-'}</td>
+                </tr>
+                ''' for teste in reversed(testes_ordenados)])}
+            </tbody>
+        </table>
+        
+        <div style="margin-top: 30px; font-size: 12px; color: #666;">
+            <p>Relatório gerado em {datetime.now().strftime('%d/%m/%Y %H:%M')}</p>
+            <p><strong>Dica:</strong> Use Ctrl+P para imprimir ou salvar como PDF</p>
+        </div>
+    </body>
+    </html>
+    """
+    
+    response = make_response(html_content)
+    response.headers["Content-Type"] = "text/html; charset=utf-8"
+    response.headers["Content-Disposition"] = f"attachment; filename=historico_{equipamento.serial}.html"
     return response
 
 
