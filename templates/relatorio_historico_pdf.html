@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <title>Relatório de Histórico</title>
+    <meta charset="utf-8">
+    <style>
+        :root {
+            --cor-fundo: #f8f9fa;
+            --cor-borda: #dee2e6;
+            --cor-texto-principal: #212529;
+            --cor-texto-secundario: #6c757d;
+        }
+        @page { size: A4; margin: 1.5cm; }
+        body { font-family: sans-serif; font-size: 10pt; color: var(--cor-texto-principal); }
+        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+        .footer { text-align: center; margin-top: 20px; font-size: 8pt; color: var(--cor-texto-secundario); position: fixed; bottom: -30px; width: 100%;}
+        h1, h2, h3, h4, p { margin: 5px 0; }
+        .info { margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid var(--cor-borda); padding: 8px; text-align: left; word-break: break-word; }
+        th {
+            background-color: var(--cor-fundo);
+            text-transform: uppercase;
+        }
+        tbody tr:nth-child(even) {
+            background-color: var(--cor-fundo);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>BLZ INTERNET LTDA</h2>
+        <h1>Relatório de Histórico do Equipamento</h1>
+    </div>
+
+    <div class="info">
+        <p><strong>Serial:</strong> {{ equipamento.serial }}</p>
+        <p><strong>Modelo:</strong> {{ equipamento.tipo }} / {{ equipamento.modelo }}</p>
+        <p><strong>Data de Cadastro:</strong> {{ equipamento.data_cadastro.strftime('%d/%m/%Y') }}</p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Data do Teste</th>
+                <th>Resultado</th>
+                <th>Tempo em Campo</th>
+                <th>Velocidade</th>
+                <th>Sinal dBm</th>
+                <th>Observações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in historico %}
+            <tr>
+                <td>{{ item.teste.data_teste.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td>{{ item.teste.status }}</td>
+                <td>{{ item.tempo_em_campo }}</td>
+                <td>{{ item.teste.velocidade_teste or 'N/A' }}</td>
+                <td>{{ item.teste.sinal_dbm or 'N/A' }}</td>
+                <td>{{ item.teste.observacoes or 'N/A' }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6">Nenhum teste registrado para este equipamento.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <div class="footer">
+        Relatório gerado em {{ now.strftime('%d/%m/%Y às %H:%M:%S') }}
+    </div>
+</body>
+</html>
+

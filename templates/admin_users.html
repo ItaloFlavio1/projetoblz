@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Usuários</title>
+    <style>
+        :root {
+            --cor-primaria: #007bff;
+            --cor-sucesso: #28a745;
+            --cor-perigo: #dc3545;
+            --cor-aviso: #ffc107;
+            --cor-info: #17a2b8;
+            --cor-fundo: #f8f9fa;
+            --cor-borda: #dee2e6;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; background-color: var(--cor-fundo); }
+        .page-container { max-width: 900px; margin: 2em auto; padding: 0 1em; }
+        .container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 2em; }
+        nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2em; flex-wrap: wrap; gap: 10px; }
+        nav a { text-decoration: none; color: white; padding: 10px 15px; border-radius: 5px; font-weight: 500; }
+        .nav-link { background-color: var(--cor-primaria); }
+        .logout-link { background-color: var(--cor-perigo); }
+        nav a:hover { opacity: 0.9; }
+        .flash-messages { list-style-type: none; padding: 0; margin-bottom: 20px; }
+        .flash-messages li { padding: 15px; border-radius: 4px; margin-bottom: 10px; font-weight: 500; }
+        .flash-danger { background-color: #f8d7da; color: #721c24; }
+        .flash-success { background-color: #d4edda; color: #155724; }
+        .flash-warning { background-color: #fff3cd; color: #856404; }
+        .form-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 2em; }
+        input, select { padding: 8px; border-radius: 4px; border: 1px solid var(--cor-borda); flex-grow: 1; }
+        button { padding: 8px 15px; border: none; background-color: var(--cor-primaria); color: white; border-radius: 4px; cursor: pointer; font-weight: 500; }
+        button:hover { opacity: 0.9; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; border-bottom: 1px solid var(--cor-borda); text-align: left; vertical-align: middle; }
+        th { background-color: var(--cor-fundo); }
+        h1, h2 { color: #343a40; border-bottom: 2px solid var(--cor-primaria); padding-bottom: 10px; }
+        .btn-delete { background-color: var(--cor-perigo); }
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
+
+        @media (max-width: 768px) {
+            .form-row { flex-direction: column; align-items: stretch; }
+            input, select, button { width: 100%; margin-right: 0; margin-bottom: 10px; box-sizing: border-box; }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <section class="container">
+            <nav>
+                <a href="{{ url_for('index') }}" class="nav-link">← Voltar para a Bancada</a>
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('logout') }}" class="logout-link">Sair</a>
+                {% endif %}
+            </nav>
+            <h1>Gerenciamento de Usuários</h1>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <ul class="flash-messages">
+                    {% for category, message in messages %}
+                        <li class="flash-{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                    </ul>
+                {% endif %}
+            {% endwith %}
+
+            <h2>Adicionar Novo Usuário</h2>
+            <form action="{{ url_for('add_user') }}" method="POST" class="form-row">
+                <label for="username" class="sr-only">Nome de usuário</label>
+                <input type="text" id="username" name="username" placeholder="Nome de usuário" required>
+                
+                <label for="password" class="sr-only">Senha</label>
+                <input type="password" id="password" name="password" placeholder="Senha" required>
+
+                <label for="role" class="sr-only">Função</label>
+                <select id="role" name="role">
+                    <option value="user" selected>Usuário Padrão</option>
+                    <option value="admin">Administrador</option>
+                </select>
+                <button type="submit">Adicionar Usuário</button>
+            </form>
+
+            <h2>Usuários Cadastrados</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome de Usuário</th>
+                        <th>Função</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.id }}</td>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.role }}</td>
+                        <td>
+                            {% if not user.is_admin %}
+                            <!-- CORREÇÃO: Adicionado style="margin: 0;" para garantir alinhamento na célula da tabela -->
+                            <form action="{{ url_for('delete_user', user_id=user.id) }}" method="POST" onsubmit="return confirm('Tem certeza que deseja deletar este usuário?');" style="margin: 0;">
+                                <button type="submit" class="btn-delete">Deletar</button>
+                            </form>
+                            {% else %}
+                                <span>(Master Admin)</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+    </div>
+</body>
+</html>
+

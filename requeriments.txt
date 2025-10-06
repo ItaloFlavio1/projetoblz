@@ -1,0 +1,9 @@
+flask==2.3.3
+flask-sqlalchemy==3.0.5
+flask-login==0.6.3
+weasyprint==58.0
+sqlalchemy==2.0.20
+werkzeug==2.3.7
+cairocffi==1.6.1
+cffi==1.15.1
+pyinstaller==5.13.0

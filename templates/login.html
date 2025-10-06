@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sistema de Equipamento Resetados</title>
+    <style>
+        :root { 
+            --cor-primaria: #007bff; 
+            --cor-primaria-escura: #0056b3;
+            --cor-sucesso: #28a745;
+            --cor-perigo: #dc3545;
+            --cor-fundo: #f8f9fa; 
+            --cor-texto: #333;
+            --cor-texto-secundario: #555;
+            --cor-borda: #ccc;
+            --sombra: 0 4px 12px rgba(0,0,0,0.1);
+            --sombra-foco: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 100vh; 
+            margin: 0; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-attachment: fixed;
+            padding: 20px;
+        }
+        
+        .login-container { 
+            background-color: #fff; 
+            padding: 40px; 
+            border-radius: 12px; 
+            box-shadow: var(--sombra); 
+            width: 100%; 
+            max-width: 420px; 
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .login-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--cor-primaria), var(--cor-sucesso));
+        }
+        
+        .logo { 
+            max-width: 180px; 
+            height: auto; 
+            margin-bottom: 25px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            transition: transform 0.3s ease;
+        }
+        
+        .logo:hover {
+            transform: scale(1.05);
+        }
+        
+        h1 { 
+            color: var(--cor-texto); 
+            margin-bottom: 30px; 
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        
+        .form-group { 
+            margin-bottom: 24px; 
+            text-align: left; 
+        }
+        
+        .form-group label { 
+            display: block; 
+            margin-bottom: 8px; 
+            font-weight: 500; 
+            color: var(--cor-texto-secundario);
+            font-size: 0.95rem;
+        }
+        
+        .form-group input { 
+            width: 100%; 
+            padding: 12px 15px; 
+            border: 1px solid var(--cor-borda); 
+            border-radius: 6px; 
+            box-sizing: border-box;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--cor-primaria);
+            box-shadow: var(--sombra-foco);
+        }
+        
+        .form-group input:invalid:not(:focus):not(:placeholder-shown) {
+            border-color: var(--cor-perigo);
+        }
+        
+        .btn-login { 
+            width: 100%; 
+            padding: 14px; 
+            border: none; 
+            border-radius: 6px; 
+            background-color: var(--cor-primaria); 
+            color: white; 
+            font-size: 1.1rem; 
+            font-weight: 600; 
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-login:hover {
+            background-color: var(--cor-primaria-escura);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn-login:active {
+            transform: translateY(0);
+        }
+        
+        .btn-login:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn-login.loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid transparent;
+            border-top: 2px solid #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .flash-messages { 
+            list-style-type: none; 
+            padding: 0; 
+            margin-bottom: 25px; 
+            text-align: left; 
+        }
+        
+        .flash-messages li { 
+            padding: 12px 15px; 
+            border-radius: 6px; 
+            margin-bottom: 12px; 
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .flash-danger { 
+            background-color: #f8d7da; 
+            color: #721c24; 
+            border: 1px solid #f5c6cb; 
+        }
+        
+        .flash-success { 
+            background-color: #d4edda; 
+            color: #155724; 
+            border: 1px solid #c3e6cb; 
+        }
+        
+        .flash-info { 
+            background-color: #d1ecf1; 
+            color: #0c5460; 
+            border: 1px solid #bee5eb; 
+        }
+        
+        .flash-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .icon {
+            font-size: 1.2em;
+        }
+        
+        .password-container {
+            position: relative;
+        }
+        
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--cor-texto-secundario);
+            padding: 5px;
+        }
+        
+        .toggle-password:focus {
+            outline: none;
+            color: var(--cor-primaria);
+        }
+        
+        .system-info {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+            color: var(--cor-texto-secundario);
+            font-size: 0.85rem;
+        }
+        
+        .forgot-password {
+            text-align: center;
+            margin-top: 15px;
+        }
+        
+        .forgot-password a {
+            color: var(--cor-primaria);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        
+        .forgot-password a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 30px 25px;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .logo {
+                max-width: 140px;
+            }
+        }
+        
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <!-- Logo da empresa -->
+        <img src="{{ url_for('static', filename='logo.png') }}" 
+             alt="Logotipo da Empresa" 
+             class="logo"
+             onerror="this.style.display='none'">
+        
+        <h1>Acesso ao Sistema</h1>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flash-messages" aria-live="polite">
+                {% for category, message in messages %}
+                    <li class="flash-{{ category }}">
+                        <span class="icon">
+                            {% if category == 'danger' %}⚠️
+                            {% elif category == 'success' %}✅
+                            {% elif category == 'info' %}ℹ️
+                            {% else %}💡{% endif %}
+                        </span>
+                        {{ message }}
+                    </li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('login') }}" id="loginForm">
+            <div class="form-group">
+                <label for="username">Usuário</label>
+                <input type="text" 
+                       id="username" 
+                       name="username" 
+                       required 
+                       autocomplete="username"
+                       aria-required="true"
+                       placeholder="Digite seu usuário"
+                       autofocus>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Senha</label>
+                <div class="password-container">
+                    <input type="password" 
+                           id="password" 
+                           name="password" 
+                           required 
+                           autocomplete="current-password"
+                           aria-required="true"
+                           placeholder="Digite sua senha">
+                    <button type="button" class="toggle-password" aria-label="Mostrar senha">
+                        👁️
+                    </button>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-login" id="submitBtn">
+                🔐 Entrar no Sistema
+            </button>
+            
+            <!-- Link para recuperação de senha (futura implementação) -->
+            <div class="forgot-password">
+                <a href="#" onclick="alert('Entre em contato com o administrador do sistema.'); return false;">
+                    Esqueceu sua senha?
+                </a>
+            </div>
+        </form>
+        
+        <div class="system-info">
+            <p>Sistema de Testes de Equipamentos</p>
+            <p>Versão 2.0 • Desenvolvido por Italo Flavio</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const togglePasswordBtn = document.querySelector('.toggle-password');
+            const passwordInput = document.getElementById('password');
+            
+            // Foco no campo de usuário
+            const usernameInput = document.getElementById('username');
+            if (usernameInput && !usernameInput.value) {
+                usernameInput.focus();
+            }
+            
+            // Alternar visibilidade da senha
+            if (togglePasswordBtn && passwordInput) {
+                togglePasswordBtn.addEventListener('click', function() {
+                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordInput.setAttribute('type', type);
+                    
+                    // Alterar ícone e texto alternativo
+                    this.textContent = type === 'password' ? '👁️' : '👁️‍🗨️';
+                    this.setAttribute('aria-label', type === 'password' ? 'Mostrar senha' : 'Ocultar senha');
+                });
+                
+                // Também permitir alternar com Enter/Space
+                togglePasswordBtn.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        this.click();
+                    }
+                });
+            }
+            
+            // Prevenir envio duplo do formulário
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(e) {
+                    // Validação básica antes de enviar
+                    const username = document.getElementById('username').value.trim();
+                    const password = document.getElementById('password').value;
+                    
+                    if (!username || !password) {
+                        e.preventDefault();
+                        return;
+                    }
+                    
+                    // Mostrar estado de carregamento
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.classList.add('loading');
+                        submitBtn.innerHTML = 'Autenticando...';
+                        
+                        // Timeout de segurança para reativar o botão se houver erro
+                        setTimeout(() => {
+                            if (submitBtn.disabled) {
+                                submitBtn.disabled = false;
+                                submitBtn.classList.remove('loading');
+                                submitBtn.innerHTML = '🔐 Entrar no Sistema';
+                            }
+                        }, 10000); // 10 segundos
+                    }
+                });
+            }
+            
+            // Validação em tempo real
+            const inputs = document.querySelectorAll('input[required]');
+            inputs.forEach(input => {
+                input.addEventListener('blur', function() {
+                    if (!this.value.trim()) {
+                        this.setAttribute('aria-invalid', 'true');
+                    } else {
+                        this.setAttribute('aria-invalid', 'false');
+                    }
+                });
+            });
+            
+            // Permitir envio com Ctrl+Enter
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.key === 'Enter') {
+                    const form = document.getElementById('loginForm');
+                    if (form) {
+                        form.requestSubmit();
+                    }
+                }
+            });
+            
+            // Feedback de acessibilidade para screen readers
+            const flashMessages = document.querySelector('.flash-messages');
+            if (flashMessages) {
+                flashMessages.setAttribute('role', 'alert');
+            }
+        });
+        
+        // Fallback para caso o JavaScript esteja desabilitado
+        document.getElementById('loginForm').className = 'js-enabled';
+    </script>
+</body>
+</html>

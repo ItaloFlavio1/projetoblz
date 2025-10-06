@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Acesso Negado</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding-top: 50px; }
+        h1 { color: #dc3545; }
+        a { color: #007bff; }
+    </style>
+</head>
+<body>
+    <h1>403 - Acesso Negado</h1>
+    <p>Você não tem permissão para acessar esta página.</p>
+    <p><a href="{{ url_for('index') }}">Voltar para a página inicial</a></p>
+</body>
+</html>
+```
+
+### **Passo 3: Atualize os Templates Existentes**
+
+Em `index.html`, `pesquisa.html`, e `historico.html`, adicione o link para a nova página de administração na barra de navegação. Este link só aparecerá se o usuário logado for um admin.
+
+Dentro da tag `<nav>` de cada um desses arquivos, adicione o bloco `{% if current_user.is_admin %}`:
+
+```html
+<nav>
+    <a href="..." class="nav-link">...</a>
+    
+    <!-- ADICIONE ESTE BLOCO -->
+    {% if current_user.is_admin %}
+        <a href="{{ url_for('manage_users') }}" class="nav-link-admin">Gerenciar Usuários</a>
+    {% endif %}
+
+    <a href="{{ url_for('logout') }}" class="logout-link">Sair</a>
+</nav>

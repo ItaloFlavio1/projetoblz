@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bancada de Testes</title>
+    <style>
+        :root {
+            --cor-primaria: #007bff;
+            --cor-sucesso: #28a745;
+            --cor-perigo: #dc3545;
+            --cor-aviso: #ffc107;
+            --cor-info: #17a2b8;
+            --cor-fundo: #f8f9fa;
+            --cor-borda: #dee2e6;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; background-color: var(--cor-fundo); }
+        .page-container { max-width: 1200px; margin: 2em auto; padding: 0 1em; }
+        .container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 2em; }
+        nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2em; flex-wrap: wrap; gap: 10px;}
+        nav a { text-decoration: none; color: white; padding: 10px 15px; border-radius: 5px; font-weight: 500; }
+        .nav-link-group { display: flex; gap: 10px; flex-wrap: wrap; }
+        .nav-link { background-color: var(--cor-sucesso); }
+        .nav-link-admin { background-color: var(--cor-info); }
+        .logout-link { background-color: var(--cor-perigo); }
+        nav a:hover { opacity: 0.9; }
+        .flash-messages { list-style-type: none; padding: 0; margin-bottom: 20px; }
+        .flash-messages li { padding: 15px; border-radius: 4px; margin-bottom: 10px; font-weight: 500; }
+        .flash-danger { background-color: #f8d7da; color: #721c24; }
+        .flash-success { background-color: #d4edda; color: #155724; }
+        .flash-info { background-color: #d1ecf1; color: #0c5460; }
+        input, select { padding: 8px; margin-right: 10px; border-radius: 4px; border: 1px solid var(--cor-borda); width: 140px; }
+        button { padding: 8px 15px; border: none; background-color: var(--cor-primaria); color: white; border-radius: 4px; cursor: pointer; font-weight: 500; }
+        button:hover { opacity: 0.9; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; border-bottom: 1px solid var(--cor-borda); text-align: left; vertical-align: middle; }
+        th { background-color: var(--cor-fundo); }
+        h1, h2 { color: #343a40; border-bottom: 2px solid var(--cor-primaria); padding-bottom: 10px; }
+        .status-Aprovado { color: var(--cor-sucesso); font-weight: bold; }
+        .status-Reprovado { color: var(--cor-perigo); font-weight: bold; }
+        .status-Aguardando { color: var(--cor-aviso); font-weight: bold; }
+        .status-icon { margin-right: 6px; }
+        .form-row, .actions-cell { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+        .tooltip { position: relative; display: inline-block; cursor: pointer; }
+        .tooltip .tooltip-text {
+            visibility: hidden; width: 220px; background-color: #333; color: #fff; text-align: left;
+            border-radius: 6px; padding: 10px; position: absolute; z-index: 1; bottom: 125%;
+            left: 50%; margin-left: -110px; opacity: 0; transition: opacity 0.3s;
+        }
+        .tooltip .tooltip-text::after {
+            content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px;
+            border-width: 5px; border-style: solid; border-color: #333 transparent transparent transparent;
+        }
+        .tooltip:hover .tooltip-text { visibility: visible; opacity: 1; }
+        .info-icon { font-size: 10px; color: #fff; background-color: #6c757d; border-radius: 50%; padding: 2px 6px; margin-left: 5px; }
+        .tooltip-text ul { list-style-type: none; padding: 0; margin: 0; }
+        .tooltip-text li { font-size: 0.9em; margin-bottom: 5px; }
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
+        
+        /* Estilos para abas */
+        .tabs { display: flex; margin-bottom: 20px; border-bottom: 1px solid var(--cor-borda); }
+        .tab { padding: 10px 20px; cursor: pointer; border: 1px solid transparent; border-bottom: none; border-radius: 4px 4px 0 0; margin-right: 5px; }
+        .tab.active { background-color: white; border-color: var(--cor-borda); border-bottom: 1px solid white; margin-bottom: -1px; font-weight: bold; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        @media (max-width: 768px) {
+            .form-row, .actions-cell { flex-direction: column; align-items: stretch; }
+            input, select, button { width: 100%; margin-right: 0; margin-bottom: 10px; box-sizing: border-box; }
+            .page-container { margin: 1em auto; }
+            h1, h2 { font-size: 1.5em; }
+            .tabs { flex-direction: column; }
+            .tab { margin-right: 0; margin-bottom: 5px; border-radius: 4px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <section class="container">
+            <nav>
+                <div class="nav-link-group">
+                    <a href="{{ url_for('pesquisar') }}" class="nav-link" aria-label="Ver ou pesquisar todos os equipamentos">Ver / Pesquisar Todos</a>
+                    {% if current_user.is_admin %}
+                        <a href="{{ url_for('manage_users') }}" class="nav-link-admin" aria-label="Gerenciar usuários">Gerenciar Usuários</a>
+                    {% endif %}
+                </div>
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('logout') }}" class="logout-link" aria-label="Sair do sistema">Sair</a>
+                {% endif %}
+            </nav>
+            <h1>Bancada de Testes</h1>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <ul class="flash-messages" aria-live="polite">
+                    {% for category, message in messages %}
+                        <li class="flash-{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                    </ul>
+                {% endif %}
+            {% endwith %}
+
+            <div class="form-section">
+                <h2>Cadastrar Novo Equipamento</h2>
+                <form action="{{ url_for('add_equipamento') }}" method="POST" class="form-row">
+                    <label for="tipo" class="sr-only">Tipo</label>
+                    <input type="text" id="tipo" name="tipo" placeholder="Tipo (ex: Roteador)" required>
+                    <label for="modelo" class="sr-only">Modelo</label>
+                    <input type="text" id="modelo" name="modelo" placeholder="Modelo (ex: Archer C60)" required>
+                    <label for="serial-input" class="sr-only">MAC</label>
+                    <input type="text" name="serial" id="serial-input" placeholder="Endereço MAC" required>
+                    <button type="submit">Cadastrar</button>
+                </form>
+                <p style="color: #666; font-size: 0.9em; margin-top: 5px;">
+                    <strong>Nota:</strong> Se o MAC já existir, o equipamento será carregado na aba "Equipamentos Existentes".
+                </p>
+            </div>
+        </section>
+
+        <section class="container">
+            <div class="tabs">
+                <div class="tab active" onclick="openTab('nao-testados')">Equipamentos Aguardando Teste ({{ equipamentos_nao_testados|length }})</div>
+                <div class="tab" onclick="openTab('testados')">Equipamentos com Histórico ({{ equipamentos_testados|length }})</div>
+            </div>
+
+            <!-- Aba 1: Equipamentos Aguardando Teste -->
+            <div id="nao-testados" class="tab-content active">
+                <h2>Equipamentos Aguardando Teste</h2>
+                {% if equipamentos_nao_testados %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>MAC</th>
+                            <th>Tipo/Modelo</th>
+                            <th>Status</th>
+                            <th>Velocidade (Mbps)</th>
+                            <th>Sinal (dBm)</th>
+                            <th>Observações</th>
+                            <th>Salvar Teste</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for eq in equipamentos_nao_testados %}
+                        <form action="{{ url_for('add_test', equip_id=eq.id) }}" method="POST">
+                            <tr>
+                                <td><strong>{{ eq.serial }}</strong></td>
+                                <td>{{ eq.tipo }} / {{ eq.modelo }}</td>
+                                <td>
+                                    <span class="status-Aguardando"><span class="status-icon">⏳</span>{{ eq.status_atual }}</span>
+                                </td>
+                                <td><input type="number" step="0.1" name="velocidade_teste" placeholder="Ex: 95.5" aria-label="Velocidade em Mbps"></td>
+                                <td><input type="number" step="0.1" name="sinal_dbm" placeholder="Ex: -65.5" aria-label="Sinal em dBm"></td>
+                                <td><input type="text" name="observacoes" placeholder="Observações..." aria-label="Observações do teste"></td>
+                                <td class="actions-cell">
+                                    <select name="status" required aria-label="Resultado do teste">
+                                        <option value="" disabled selected>Selecione...</option>
+                                        <option value="Aprovado">Aprovado</option>
+                                        <option value="Reprovado">Reprovado</option>
+                                    </select>
+                                    <button type="submit">Salvar Teste</button>
+                                </td>
+                            </tr>
+                        </form>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div style="text-align: center; padding: 40px; color: #666;">
+                    <p>Nenhum equipamento aguardando teste.</p>
+                    <p>Cadastre um novo equipamento ou adicione testes a equipamentos existentes.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Aba 2: Equipamentos com Histórico -->
+            <div id="testados" class="tab-content">
+                <h2>Equipamentos com Histórico de Testes</h2>
+                {% if equipamentos_testados %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>MAC</th>
+                            <th>Tipo/Modelo</th>
+                            <th>Status Atual</th>
+                            <th>Último Teste</th>
+                            <th>Velocidade (Mbps)</th>
+                            <th>Sinal (dBm)</th>
+                            <th>Observações</th>
+                            <th>Novo Teste</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for eq in equipamentos_testados %}
+                        <form action="{{ url_for('add_test', equip_id=eq.id) }}" method="POST">
+                            <tr>
+                                <td><strong>{{ eq.serial }}</strong></td>
+                                <td>
+                                    {{ eq.tipo }} / {{ eq.modelo }}
+                                    {% if eq.testes %}
+                                    <div class="tooltip">
+                                        <span class="info-icon" aria-describedby="tooltip-{{ eq.id }}">i</span>
+                                        <span class="tooltip-text" id="tooltip-{{ eq.id }}">
+                                            <ul>
+                                                <strong>Histórico de Testes:</strong>
+                                                {% for teste in eq.testes[:5] %}
+                                                <li>{{ teste.data_teste.strftime('%d/%m/%y %H:%M') }}: {{ teste.status }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </span>
+                                    </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if eq.status_atual.startswith("Aprovado") %}
+                                        <span class="status-Aprovado"><span class="status-icon">✔️</span>{{ eq.status_atual }}</span>
+                                    {% elif eq.status_atual.startswith("Reprovado") %}
+                                        <span class="status-Reprovado"><span class="status-icon">❌</span>{{ eq.status_atual }}</span>
+                                    {% else %}
+                                        <span class="status-Aguardando"><span class="status-icon">⏳</span>{{ eq.status_atual }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if eq.testes %}
+                                        {{ eq.testes[0].data_teste.strftime('%d/%m/%y %H:%M') }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td><input type="number" step="0.1" name="velocidade_teste" placeholder="Ex: 1000" aria-label="Velocidade em Mbps"></td>
+                                <td><input type="number" step="0.1" name="sinal_dbm" placeholder="Ex: -24" aria-label="Sinal em dBm"></td>
+                                <td><input type="text" name="observacoes" placeholder="Observações..." aria-label="Observações do teste"></td>
+                                <td class="actions-cell">
+                                    <select name="status" required aria-label="Resultado do teste">
+                                        <option value="" disabled selected>Selecione...</option>
+                                        <option value="Aprovado">Aprovado</option>
+                                        <option value="Reprovado">Reprovado</option>
+                                    </select>
+                                    <button type="submit">Salvar</button>
+                                </td>
+                            </tr>
+                        </form>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div style="text-align: center; padding: 40px; color: #666;">
+                    <p>Nenhum equipamento com histórico de testes.</p>
+                    <p>Realize testes nos equipamentos para criar histórico.</p>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+    </div>
+    <script>
+        window.onload = function() {
+            document.getElementById('serial-input').focus();
+        };
+
+        // Função para alternar entre abas
+        function openTab(tabName) {
+            // Esconde todos os conteúdos de abas
+            var tabContents = document.getElementsByClassName('tab-content');
+            for (var i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove('active');
+            }
+            
+            // Remove a classe active de todas as abas
+            var tabs = document.getElementsByClassName('tab');
+            for (var i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+            }
+            
+            // Mostra a aba específica e marca como ativa
+            document.getElementById(tabName).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        // Permite enviar formulário com Enter em campos de teste
+        document.querySelectorAll("form").forEach(form => {
+            form.addEventListener("keypress", function(e) {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    form.querySelector("button[type='submit']").click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
