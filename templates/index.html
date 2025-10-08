@@ -9,22 +9,17 @@
             --cor-laranja-blz: #f15a24;
             --cor-amarelo-blz: #fdb913;
             --gradiente-blz: linear-gradient(90deg, var(--cor-amarelo-blz), var(--cor-laranja-blz));
-            
-            /* Tema Claro */
             --cor-fundo: #f0f2f5;
             --cor-fundo-card: #ffffff;
             --cor-texto-principal: #212529;
             --cor-texto-secundario: #6c757d;
             --cor-borda: #dee2e6;
             --sombra: 0 4px 25px rgba(0, 0, 0, 0.08);
-
-            /* Cores de Ação */
             --cor-sucesso: #28a745;
             --cor-perigo: #dc3545;
             --cor-info: #17a2b8;
             --cor-aviso: #ffc107;
         }
-
         [data-theme="dark"] {
             --cor-fundo: #121212;
             --cor-fundo-card: #1e1e1e;
@@ -32,102 +27,74 @@
             --cor-texto-secundario: #888888;
             --cor-borda: #444444;
         }
-        
         * { box-sizing: border-box; }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             margin: 0;
-            padding-top: 80px; /* Espaço para a barra superior fixa */
+            padding-top: 80px;
             background-color: var(--cor-fundo);
             color: var(--cor-texto-principal);
             transition: background-color 0.3s, color 0.3s;
         }
-
         .top-bar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 30px;
-            background-color: var(--cor-fundo-card);
-            box-shadow: var(--sombra);
-            z-index: 1000;
-            transition: background-color 0.3s;
+            position: fixed; top: 0; left: 0; right: 0; display: flex;
+            justify-content: space-between; align-items: center; padding: 15px 30px;
+            background-color: var(--cor-fundo-card); box-shadow: var(--sombra);
+            z-index: 1000; transition: background-color 0.3s;
         }
-
         .top-bar-logo { display: flex; align-items: center; gap: 15px; }
         .top-bar-logo img { height: 40px; }
         .top-bar-logo h1 { font-size: 1.2rem; font-weight: 600; margin: 0; color: var(--cor-texto-principal); }
-
         .top-bar-nav { display: flex; align-items: center; gap: 15px; }
         .nav-link { 
             text-decoration: none; color: white; padding: 8px 12px; border-radius: 5px; 
             font-weight: 500; font-size: 0.9rem; transition: all 0.2s ease;
         }
-        .nav-link:hover { transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .nav-link:hover { transform: translateY(-1px); }
         .link-pesquisar { background-color: var(--cor-sucesso); }
         .link-admin { background-color: var(--cor-info); }
-        .link-logout { background-color: var(--cor-perigo); }
-
+        .link-logs { background-color: var(--cor-aviso); color: var(--cor-texto-principal); }
+        .logout-link { background-color: var(--cor-perigo); }
         .page-container { max-width: 1400px; margin: 2em auto; padding: 0 1em; }
-        .card { background-color: var(--cor-fundo-card); padding: 25px; border-radius: 12px; box-shadow: var(--sombra); margin-bottom: 2em; transition: background-color 0.3s; }
-        
-        h2 { 
+        .card { background-color: var(--cor-fundo-card); padding: 25px; border-radius: 12px; box-shadow: var(--sombra); margin-bottom: 2em; }
+        h2, h3 { 
             color: var(--cor-texto-principal); 
             border-bottom: 2px solid var(--cor-borda); 
             padding-bottom: 15px; 
             margin-top: 0;
             font-size: 1.5rem;
         }
-
+        h3 { font-size: 1.2rem; border-bottom: none; }
         .form-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 15px; }
         .form-group { flex: 1 1 180px; }
         .form-group label { display: block; margin-bottom: 8px; font-weight: 500; color: var(--cor-texto-secundario); }
         .form-group input, .form-group select {
             width: 100%; padding: 10px; border-radius: 5px; border: 1px solid var(--cor-borda);
-            background-color: var(--cor-fundo); color: var(--cor-texto-principal);
-            font-size: 0.95rem;
+            background-color: var(--cor-fundo); color: var(--cor-texto-principal); font-size: 0.95rem;
         }
         .form-group input:focus, .form-group select:focus {
             outline: none; border-color: var(--cor-laranja-blz);
             box-shadow: 0 0 0 3px rgba(241, 90, 36, 0.2);
         }
-
         .btn-submit { 
             padding: 10px 20px; border: none; background: var(--gradiente-blz); color: white; 
             border-radius: 5px; cursor: pointer; font-weight: 600;
         }
-        
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 12px; border-bottom: 1px solid var(--cor-borda); text-align: left; vertical-align: middle; font-size: 0.9rem; }
         th { background-color: var(--cor-fundo); font-weight: 600; text-transform: uppercase; font-size: 0.8rem;}
-        tbody tr:hover { background-color: rgba(0, 123, 255, 0.05); }
-        [data-theme="dark"] tbody tr:hover { background-color: rgba(255, 255, 255, 0.05); }
-
-        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; }
-        .status-aprovado { background-color: rgba(40, 167, 69, 0.1); color: var(--cor-sucesso); }
-        .status-reprovado { background-color: rgba(220, 53, 69, 0.1); color: var(--cor-perigo); }
-        .status-aguardando { background-color: rgba(255, 193, 7, 0.1); color: var(--cor-aviso); }
-        
         .flash-messages { list-style-type: none; padding: 0; margin-bottom: 25px; }
         .flash-messages li { padding: 12px 15px; border-radius: 6px; font-weight: 500; }
         .flash-danger { background-color: #f8d7da; color: #721c24; }
         .flash-success { background-color: #d4edda; color: #155724; }
         .flash-info { background-color: #d1ecf1; color: #0c5460; }
-        
         .tabs { display: flex; margin-bottom: -1px; border-bottom: 1px solid var(--cor-borda); }
         .tab { padding: 10px 20px; cursor: pointer; border: 1px solid transparent; border-bottom: none; margin-bottom: -1px; }
         .tab.active { border-color: var(--cor-borda); border-bottom: 1px solid var(--cor-fundo-card); background-color: var(--cor-fundo-card); font-weight: bold; border-radius: 6px 6px 0 0; }
-        .tab-content { display: none; padding: 20px; border: 1px solid var(--cor-borda); border-top: none; border-radius: 0 0 8px 8px; }
+        .tab-content { display: none; padding-top: 20px; }
         .tab-content.active { display: block; }
-        
         .mac-link { color: var(--cor-laranja-blz); text-decoration: none; font-weight: bold; }
-        .mac-link:hover { text-decoration: underline; }
-        
+        .actions-cell { display: flex; align-items: center; gap: 10px; }
         .theme-switch { display: flex; align-items: center; gap: 10px; color: var(--cor-texto-secundario); }
         .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
         .switch input { opacity: 0; width: 0; height: 0; }
@@ -135,13 +102,10 @@
         .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background: var(--gradiente-blz); }
         input:checked + .slider:before { transform: translateX(20px); }
-
         @media (max-width: 992px) { .top-bar-logo h1 { display: none; } }
         @media (max-width: 768px) {
-            .form-row { flex-direction: column; align-items: stretch; }
-            .form-group { flex-basis: auto; }
+            .form-row, .actions-cell { flex-direction: column; align-items: stretch; }
             .page-container { margin: 1em auto; padding-top: 70px; }
-            h1, h2 { font-size: 1.5rem; }
             table { display: block; overflow-x: auto; white-space: nowrap; }
             .tabs { flex-direction: column; border-bottom: none; }
             .tab { margin-right: 0; margin-bottom: 2px; border-radius: 4px; }
@@ -159,8 +123,9 @@
             <a href="{{ url_for('pesquisar') }}" class="nav-link link-pesquisar">Pesquisar</a>
             {% if current_user.is_admin %}
                 <a href="{{ url_for('manage_users') }}" class="nav-link link-admin">Gerenciar Usuários</a>
+                <a href="{{ url_for('view_logs') }}" class="nav-link link-logs">Logs do Sistema</a>
             {% endif %}
-            <a href="{{ url_for('logout') }}" class="nav-link link-logout">Sair ({{ current_user.username }})</a>
+            <a href="{{ url_for('logout') }}" class="nav-link logout-link">Sair ({{ current_user.username }})</a>
             <div class="theme-switch">
                 <span>☀️</span>
                 <label class="switch">
@@ -191,15 +156,15 @@
             <form action="{{ url_for('add_equipamento') }}" method="POST" class="form-row">
                 <div class="form-group">
                     <label for="serial-input">MAC do Equipamento</label>
-                    <input type="text" name="serial" id="serial-input" placeholder="Obrigatório" required>
+                    <input type="text" name="serial" id="serial-input" placeholder="ex: MAC/FHTT" required>
                 </div>
                 <div class="form-group">
                     <label for="tipo">Tipo</label>
-                    <input type="text" id="tipo" name="tipo" placeholder="Apenas se for novo">
+                    <input type="text" id="tipo" name="tipo" placeholder="ex: ONU/ROTEADOR">
                 </div>
                 <div class="form-group">
                     <label for="modelo">Modelo</label>
-                    <input type="text" id="modelo" name="modelo" placeholder="Apenas se for novo">
+                    <input type="text" id="modelo" name="modelo" placeholder="ex: AN/HG/W5">
                 </div>
                 <button type="submit" class="btn-submit">Cadastrar / Solicitar</button>
             </form>
@@ -211,7 +176,7 @@
         <section class="card">
             <div class="tabs">
                 <div class="tab active" onclick="openTab(event, 'nao-testados')">Aguardando Teste ({{ equipamentos_nao_testados|length }})</div>
-                <div class="tab" onclick="openTab(event, 'testados')">Com Histórico (Visualização) ({{ equipamentos_testados|length }})</div>
+                <div class="tab" onclick="openTab(event, 'testados')">Histórico ({{ equipamentos_testados|length }})</div>
             </div>
 
             <div id="nao-testados" class="tab-content active">
@@ -249,14 +214,7 @@
                  <table>
                     <thead>
                         <tr>
-                            <th>MAC</th>
-                            <th>Tipo/Modelo</th>
-                            <th>Status Atual</th>
-                            <th>Último Teste</th>
-                            <th>Testado por</th>
-                            <th>Velocidade</th>
-                            <th>Sinal</th>
-                            <th>Observações</th>
+                            <th>MAC</th><th>Tipo/Modelo</th><th>Status Atual</th><th>Último Teste</th><th>Testado por</th><th>Velocidade</th><th>Sinal</th><th>Observações</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -282,20 +240,11 @@
                 </table>
             </div>
         </section>
+
     </main>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Foco automático
-            document.getElementById('serial-input').focus();
-            
-            // Lógica das Abas
-            const firstTab = document.querySelector('.tab');
-            if (firstTab) {
-                firstTab.click();
-            }
-
-            // Lógica do Toggle de Tema
             const themeToggle = document.getElementById('theme-toggle');
             const currentTheme = localStorage.getItem('theme');
             if (currentTheme) {
@@ -305,14 +254,16 @@
                 }
             }
             themeToggle.addEventListener('change', function() {
-                if (this.checked) {
-                    document.documentElement.setAttribute('data-theme', 'dark');
-                    localStorage.setItem('theme', 'dark');
-                } else {
-                    document.documentElement.setAttribute('data-theme', 'light');
-                    localStorage.setItem('theme', 'light');
-                }
+                const theme = this.checked ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
             });
+            
+            // Lógica das Abas
+            const firstTab = document.querySelector('.tab');
+            if (firstTab) {
+                firstTab.click();
+            }
         });
 
         function openTab(evt, tabName) {

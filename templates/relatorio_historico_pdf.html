@@ -5,19 +5,38 @@
     <meta charset="utf-8">
     <style>
         :root {
-            --cor-fundo: #f8f9fa;
-            --cor-borda: #dee2e6;
-            --cor-texto-principal: #212529;
-            --cor-texto-secundario: #6c757d;
+            --cor-primaria: #007bff;
             --cor-sucesso: #28a745;
             --cor-perigo: #dc3545;
+            --cor-fundo: #f8f9fa;
+            --cor-borda: #dee2e6;
+            --cor-texto: #343a40;
+            --cor-texto-secundario: #6c757d;
         }
         @page { size: A4; margin: 1.5cm; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 9pt; color: var(--cor-texto-principal); }
-        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 15px; }
-        .footer { text-align: center; margin-top: 20px; font-size: 8pt; color: var(--cor-texto-secundario); position: fixed; bottom: -40px; width: 100%;}
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+            font-size: 9pt; 
+            color: var(--cor-texto);
+        }
+        .header { 
+            text-align: center; 
+            margin-bottom: 20px; 
+            border-bottom: 2px solid #333; 
+            padding-bottom: 15px; 
+        }
+        .footer { 
+            text-align: center; 
+            margin-top: 20px; 
+            font-size: 8pt; 
+            color: var(--cor-texto-secundario); 
+            position: fixed; 
+            bottom: -40px; 
+            width: 100%;
+        }
         h1 { font-size: 1.8em; margin: 0; }
-        h2 { font-size: 1.1em; font-weight: 400; color: var(--cor-texto-secundario); margin: 0; }
+        h2 { font-size: 1.1em; font-weight: 400; color: var(--cor-texto-secundario); margin: 5px 0 0 0; }
+        
         .info-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -29,14 +48,26 @@
         }
         .info-item p { margin: 0; }
         .info-item strong { color: var(--cor-texto-secundario); }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid var(--cor-borda); padding: 8px; text-align: left; word-break: break-word; }
+        
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px; 
+        }
+        th, td { 
+            border: 1px solid var(--cor-borda); 
+            padding: 8px; 
+            text-align: left; 
+            word-break: break-word; 
+        }
         th {
             background-color: var(--cor-fundo);
             text-transform: uppercase;
             font-size: 0.8em;
         }
-        tbody tr:nth-child(even) { background-color: var(--cor-fundo); }
+        tbody tr:nth-child(even) { 
+            background-color: var(--cor-fundo); 
+        }
         .status-badge {
             display: inline-block;
             padding: 3px 7px;

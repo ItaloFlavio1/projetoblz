@@ -1,101 +1,83 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Histórico de Testes - {{ equipamento.serial }}</title>
     <style>
         :root {
+            --cor-laranja-blz: #f15a24;
+            --cor-amarelo-blz: #fdb913;
+            --gradiente-blz: linear-gradient(90deg, var(--cor-amarelo-blz), var(--cor-laranja-blz));
+            
+            /* Tema Claro */
+            --cor-fundo: #f0f2f5;
+            --cor-fundo-card: #ffffff;
+            --cor-texto-principal: #212529;
+            --cor-texto-secundario: #6c757d;
+            --cor-borda: #dee2e6;
+            --sombra: 0 4px 25px rgba(0, 0, 0, 0.08);
+
+            /* Cores de Ação */
             --cor-primaria: #007bff;
             --cor-sucesso: #28a745;
             --cor-perigo: #dc3545;
-            --cor-aviso: #ffc107;
             --cor-info: #17a2b8;
+            --cor-aviso: #ffc107;
             --cor-pdf: #B30B00;
-            --cor-fundo: #f8f9fa;
-            --cor-borda: #dee2e6;
-            --cor-texto: #343a40;
-            --cor-texto-secundario: #6c757d;
-            --sombra: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        [data-theme="dark"] {
+            --cor-fundo: #121212;
+            --cor-fundo-card: #1e1e1e;
+            --cor-texto-principal: #e0e0e0;
+            --cor-texto-secundario: #888888;
+            --cor-borda: #444444;
         }
         
-        * {
-            box-sizing: border-box;
-        }
-        
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
-            margin: 0; 
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding-top: 80px;
             background-color: var(--cor-fundo);
-            color: var(--cor-texto);
-            line-height: 1.6;
+            color: var(--cor-texto-principal);
+            transition: background-color 0.3s, color 0.3s;
         }
-        
-        .page-container { 
-            max-width: 1400px; 
-            margin: 2em auto; 
-            padding: 0 1em; 
+
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background-color: var(--cor-fundo-card);
+            box-shadow: var(--sombra);
+            z-index: 1000;
         }
-        
-        .container { 
-            background-color: #fff; 
-            padding: 25px; 
-            border-radius: 8px; 
-            box-shadow: var(--sombra); 
-        }
-        
-        nav { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            margin-bottom: 2em; 
-            flex-wrap: wrap; 
-            gap: 10px;
-        }
-        
-        .nav-link-group { 
-            display: flex; 
-            gap: 10px; 
-            flex-wrap: wrap; 
-        }
-        
+
+        .top-bar-logo { display: flex; align-items: center; gap: 15px; }
+        .top-bar-logo img { height: 40px; }
+        .top-bar-logo h1 { font-size: 1.2rem; font-weight: 600; margin: 0; color: var(--cor-texto-principal); }
+
+        .top-bar-nav { display: flex; align-items: center; gap: 15px; }
         .nav-link, .btn { 
-            text-decoration: none; 
-            color: white; 
-            padding: 10px 15px; 
-            border-radius: 5px; 
-            display: inline-block; 
-            font-weight: 500; 
-            border: none; 
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
-            font-size: 0.9rem;
+            text-decoration: none; color: white; padding: 8px 12px; border-radius: 5px; 
+            font-weight: 500; font-size: 0.9rem; transition: all 0.2s ease; border: none; cursor: pointer;
         }
-        
-        .nav-link { 
-            background-color: var(--cor-primaria); 
-        }
-        
-        .nav-link:hover,
-        .btn:hover:not(:disabled) {
-            opacity: 0.9; 
-            transform: translateY(-1px);
-            text-decoration: none;
-            color: white;
-        }
-        
-        .nav-link-admin { 
-            background-color: var(--cor-info); 
-        }
-        
-        .logout-link { 
-            background-color: var(--cor-perigo); 
-        }
-        
-        .btn-pdf { 
-            background-color: var(--cor-pdf); 
-        }
+        .nav-link:hover, .btn:hover { transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .link-bancada { background-color: var(--cor-primaria); }
+        .link-pesquisar { background-color: var(--cor-sucesso); }
+        .link-admin { background-color: var(--cor-info); }
+        .link-logs { background-color: var(--cor-aviso); color: var(--cor-texto-principal); }
+        .logout-link { background-color: var(--cor-perigo); }
+
+        .page-container { max-width: 1400px; margin: 2em auto; padding: 0 1em; }
+        .card { background-color: var(--cor-fundo-card); padding: 25px; border-radius: 12px; box-shadow: var(--sombra); }
         
         .info-header { 
             display: flex;
@@ -103,23 +85,16 @@
             align-items: flex-start;
             flex-wrap: wrap;
             gap: 20px;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); 
+            background: linear-gradient(135deg, var(--cor-fundo) 0%, #e9ecef 100%); 
             padding: 25px; 
             border-radius: 8px; 
             margin-bottom: 2em;
-            border-left: 4px solid var(--cor-primaria);
+            border-left: 4px solid var(--cor-laranja-blz);
         }
-        
-        .header-content { 
-            flex-grow: 1; 
-        }
-        
-        .header-content h1 { 
-            margin-top: 0; 
-            color: var(--cor-texto);
-            border-bottom: none;
-            padding-bottom: 0;
-        }
+        [data-theme="dark"] .info-header { background: #2a2a2a; }
+
+        .header-content { flex-grow: 1; }
+        .header-content h1 { margin-top: 0; color: var(--cor-texto-principal); border-bottom: none; padding-bottom: 0; font-size: 1.8rem; }
         
         .equipamento-info {
             display: grid;
@@ -129,136 +104,78 @@
         }
         
         .info-item {
-            background: white;
+            background-color: var(--cor-fundo-card);
             padding: 12px;
             border-radius: 6px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
         
-        .info-label {
-            font-size: 0.8rem;
-            color: var(--cor-texto-secundario);
-            text-transform: uppercase;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
+        .info-label { font-size: 0.8rem; color: var(--cor-texto-secundario); text-transform: uppercase; font-weight: 600; margin-bottom: 5px; }
+        .info-value { font-size: 1rem; font-weight: 500; color: var(--cor-texto-principal); }
         
-        .info-value {
-            font-size: 1rem;
-            font-weight: 500;
-            color: var(--cor-texto);
-        }
+        .btn-pdf { background-color: var(--cor-pdf); }
         
-        table { 
-            width: 100%; 
-            border-collapse: collapse;
-            margin-top: 1em;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
+        table { width: 100%; border-collapse: collapse; margin-top: 1em; }
+        th, td { padding: 12px 15px; border-bottom: 1px solid var(--cor-borda); text-align: left; word-break: break-word; vertical-align: top; }
+        th { background-color: var(--cor-fundo); font-weight: 600; position: sticky; top: 80px; border-bottom: 2px solid var(--cor-borda); text-transform: uppercase; font-size: 0.8rem; }
+        tbody tr:hover { background-color: rgba(0, 123, 255, 0.05); }
+        [data-theme="dark"] tbody tr:hover { background-color: rgba(255, 255, 255, 0.05); }
         
-        th, td { 
-            padding: 12px; 
-            border-bottom: 1px solid var(--cor-borda); 
-            text-align: left; 
-            word-break: break-word; 
-            vertical-align: top;
-        }
+        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; }
+        .status-aprovado { background-color: rgba(40, 167, 69, 0.1); color: var(--cor-sucesso); }
+        .status-reprovado { background-color: rgba(220, 53, 69, 0.1); color: var(--cor-perigo); }
         
-        th { 
-            background-color: var(--cor-fundo); 
-            font-weight: 600;
-            position: sticky;
-            top: 0;
-            border-bottom: 2px solid var(--cor-borda);
-        }
+        .empty-state { text-align: center; padding: 3em; color: var(--cor-texto-secundario); }
+        .teste-detalhes { font-size: 0.9rem; color: var(--cor-texto-secundario); }
+        .observacoes { max-width: 200px; font-size: 0.9rem; line-height: 1.4; }
         
-        tbody tr:hover {
-            background-color: rgba(0, 123, 255, 0.05);
-        }
-        
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-align: center;
-            min-width: 80px;
-        }
-        
-        .status-aprovado { 
-            background-color: rgba(40, 167, 69, 0.1);
-            color: var(--cor-sucesso);
-        }
-        
-        .status-reprovado { 
-            background-color: rgba(220, 53, 69, 0.1);
-            color: var(--cor-perigo);
-        }
-        
-        .status-aguardando { 
-            background-color: rgba(255, 193, 7, 0.1);
-            color: var(--cor-aviso);
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 3em;
-            color: var(--cor-texto-secundario);
-        }
-        
-        .teste-detalhes {
-            font-size: 0.9rem;
-            color: var(--cor-texto-secundario);
-        }
-        
-        .observacoes {
-            max-width: 200px;
-            font-size: 0.9rem;
-            line-height: 1.4;
-        }
-        
+        .theme-switch { display: flex; align-items: center; gap: 10px; color: var(--cor-texto-secundario); }
+        /* ... (restante do CSS do theme switch) ... */
+
+        @media (max-width: 992px) { .top-bar-logo h1 { display: none; } }
         @media (max-width: 768px) {
-            .page-container { 
-                margin: 1em auto; 
-                padding: 0 0.5em;
-            }
-            .container { padding: 15px; }
-            nav { flex-direction: column; align-items: stretch; }
-            .nav-link-group { justify-content: center; margin-bottom: 10px; }
+            .page-container { margin: 1em auto; padding: 0 0.5em; padding-top: 70px; }
             .info-header { flex-direction: column; text-align: center; }
             .btn-pdf { width: 100%; margin-top: 15px; }
             .equipamento-info { grid-template-columns: 1fr; }
             table { display: block; overflow-x: auto; white-space: nowrap; }
-            th, td { padding: 8px; font-size: 0.85rem; }
-            .observacoes { max-width: 150px; white-space: normal; }
         }
     </style>
 </head>
 <body>
-    <div class="page-container">
-        <section class="container">
-            <nav>
-                <div class="nav-link-group">
-                    <a href="{{ url_for('pesquisar') }}" class="nav-link">⬅️ Voltar para Pesquisa</a>
-                    <a href="{{ url_for('index') }}" class="nav-link">🏭 Ir para Bancada</a>
-                    {% if current_user.is_admin %}
-                        <a href="{{ url_for('manage_users') }}" class="nav-link nav-link-admin">👥 Gerenciar Usuários</a>
-                    {% endif %}
-                </div>
-                {% if current_user.is_authenticated %}
-                    <a href="{{ url_for('logout') }}" class="nav-link logout-link">🚪 Sair ({{ current_user.username }})</a>
-                {% endif %}
-            </nav>
-            
+
+    <header class="top-bar">
+        <div class="top-bar-logo">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Logotipo da Empresa">
+            <h1>Controle de Equipamentos</h1>
+        </div>
+        <div class="top-bar-nav">
+            <a href="{{ url_for('index') }}" class="nav-link link-bancada">Bancada</a>
+            <a href="{{ url_for('pesquisar') }}" class="nav-link link-pesquisar">Pesquisar</a>
+            {% if current_user.is_admin %}
+                <a href="{{ url_for('manage_users') }}" class="nav-link link-admin">Gerenciar Usuários</a>
+                <a href="{{ url_for('view_logs') }}" class="nav-link link-logs">Logs</a>
+            {% endif %}
+            <a href="{{ url_for('logout') }}" class="nav-link logout-link">Sair ({{ current_user.username }})</a>
+            <div class="theme-switch">
+                <span>☀️</span>
+                <label class="switch">
+                    <input type="checkbox" id="theme-toggle">
+                    <span class="slider"></span>
+                </label>
+                <span>🌙</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-container">
+        <section class="card">
             <header class="info-header">
                 <div class="header-content">
                     <h1>📊 Histórico de Testes</h1>
                     <div class="equipamento-info">
                         <div class="info-item">
-                            <div class="info-label">Número de Série (MAC)</div>
+                            <div class="info-label">MAC</div>
                             <div class="info-value">{{ equipamento.serial }}</div>
                         </div>
                         <div class="info-item">
@@ -272,15 +189,13 @@
                         <div class="info-item">
                             <div class="info-label">Status Atual</div>
                             <div class="info-value">
-                                <span class="status-badge status-{{ equipamento.status_atual.split(' ')[0].lower() }}">
-                                    {% if equipamento.status_atual.startswith("Aprovado") %}✅
-                                    {% elif equipamento.status_atual.startswith("Reprovado") %}❌
-                                    {% else %}⏳{% endif %}
+                                <span class="status-badge status-{{ equipamento.status_atual.lower().split(' ')[0] }}">
+                                    {% if "Aprovado" in equipamento.status_atual %}✅{% else %}❌{% endif %}
                                     {{ equipamento.status_atual }}
                                 </span>
                             </div>
                         </div>
-                        <div class="info-item">
+                         <div class="info-item">
                             <div class="info-label">Data de Cadastro</div>
                             <div class="info-value">{{ equipamento.data_cadastro.strftime('%d/%m/%Y') if equipamento.data_cadastro else 'N/A' }}</div>
                         </div>
@@ -290,12 +205,7 @@
                         </div>
                     </div>
                 </div>
-                <a href="{{ url_for('export_historico_pdf', equip_id=equipamento.id) }}" 
-                   class="btn btn-pdf"
-                   target="_blank"
-                   aria-label="Exportar histórico para PDF">
-                    📄 Exportar PDF
-                </a>
+                <a href="{{ url_for('export_historico_pdf', equip_id=equipamento.id) }}" class="btn btn-pdf" target="_blank">📄 Exportar PDF</a>
             </header>
 
             {% if historico %}
@@ -312,25 +222,22 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for item in historico %}
+                        {% for teste in historico %}
                         <tr>
                             <td>
-                                <strong>{{ item.teste.data_teste.strftime('%d/%m/%Y') }}</strong>
-                                <br>
-                                <small class="teste-detalhes">{{ item.teste.data_teste.strftime('%H:%M') }}</small>
+                                <strong>{{ teste.data_teste.strftime('%d/%m/%Y') }}</strong><br>
+                                <small class="teste-detalhes">{{ teste.data_teste.strftime('%H:%M') }}</small>
                             </td>
-                            <td>{{ item.teste.tester.username }}</td>
+                            <td>{{ teste.tester.username }}</td>
                             <td>
-                                <span class="status-badge status-{{ item.teste.status.lower() }}">
-                                    {% if item.teste.status == "Aprovado" %}✅
-                                    {% elif item.teste.status == "Reprovado" %}❌
-                                    {% else %}⏳{% endif %}
-                                    {{ item.teste.status }}
+                                <span class="status-badge status-{{ teste.status.lower() }}">
+                                    {% if teste.status == "Aprovado" %}✅{% else %}❌{% endif %}
+                                    {{ teste.status }}
                                 </span>
                             </td>
-                            <td class="teste-detalhes">{{ item.teste.velocidade_teste or 'N/A' }}</td>
-                            <td class="teste-detalhes">{{ item.teste.sinal_dbm or 'N/A' }}</td>
-                            <td class="observacoes">{{ item.teste.observacoes or '-' }}</td>
+                            <td class="teste-detalhes">{{ teste.velocidade_teste or 'N/A' }}</td>
+                            <td class="teste-detalhes">{{ teste.sinal_dbm or 'N/A' }}</td>
+                            <td class="observacoes">{{ teste.observacoes or '-' }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -340,15 +247,26 @@
             <div class="empty-state">
                 <h2>📭 Nenhum teste registrado</h2>
                 <p>Este equipamento ainda não possui testes no histórico.</p>
-                <p>
-                    <a href="{{ url_for('index') }}" class="nav-link" style="display: inline-block; margin-top: 10px;">
-                        🏭 Ir para a bancada para realizar o primeiro teste
-                    </a>
-                </p>
             </div>
             {% endif %}
         </section>
-    </div>
+    </main>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Lógica do Toggle de Tema
+            const themeToggle = document.getElementById('theme-toggle');
+            const currentTheme = localStorage.getItem('theme');
+            if (currentTheme) {
+                document.documentElement.setAttribute('data-theme', currentTheme);
+                if (currentTheme === 'dark') themeToggle.checked = true;
+            }
+            themeToggle.addEventListener('change', function() {
+                const theme = this.checked ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+            });
+        });
+    </script>
 </body>
 </html>
 

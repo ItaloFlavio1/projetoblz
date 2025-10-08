@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-br" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logs do Sistema</title>
+    <style>
+        :root {
+            --cor-laranja-blz: #f15a24;
+            --cor-fundo: #f0f2f5;
+            --cor-fundo-card: #ffffff;
+            --cor-texto-principal: #212529;
+            --cor-texto-secundario: #6c757d;
+            --cor-borda: #dee2e6;
+            --sombra: 0 4px 25px rgba(0, 0, 0, 0.08);
+            --cor-sucesso: #28a745;
+            --cor-perigo: #dc3545;
+            --cor-info: #17a2b8;
+            --cor-aviso: #ffc107;
+        }
+        [data-theme="dark"] {
+            --cor-fundo: #121212;
+            --cor-fundo-card: #1e1e1e;
+            --cor-texto-principal: #e0e0e0;
+            --cor-texto-secundario: #888888;
+            --cor-borda: #444444;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; padding-top: 80px; background-color: var(--cor-fundo); color: var(--cor-texto-principal); transition: background-color 0.3s, color 0.3s; }
+        .top-bar { position: fixed; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; background-color: var(--cor-fundo-card); box-shadow: var(--sombra); z-index: 1000; }
+        .top-bar-logo { display: flex; align-items: center; gap: 15px; }
+        .top-bar-logo img { height: 40px; }
+        .top-bar-logo h1 { font-size: 1.2rem; margin: 0; color: var(--cor-texto-principal); }
+        .top-bar-nav { display: flex; align-items: center; gap: 15px; }
+        .nav-link { text-decoration: none; color: white; padding: 8px 12px; border-radius: 5px; font-weight: 500; font-size: 0.9rem; transition: all 0.2s ease; }
+        .nav-link:hover { transform: translateY(-1px); }
+        .link-bancada { background-color: var(--cor-primaria, #007bff); }
+        .link-admin { background-color: var(--cor-info); }
+        .logout-link { background-color: var(--cor-perigo); }
+        .page-container { max-width: 1400px; margin: 2em auto; padding: 0 1em; }
+        .card { background-color: var(--cor-fundo-card); padding: 25px; border-radius: 12px; box-shadow: var(--sombra); }
+        h1 { color: var(--cor-texto-principal); border-bottom: 2px solid var(--cor-borda); padding-bottom: 15px; margin-top: 0; font-size: 1.8rem; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; border-bottom: 1px solid var(--cor-borda); text-align: left; vertical-align: middle; font-size: 0.9rem; }
+        th { background-color: var(--cor-fundo); font-weight: 600; text-transform: uppercase; font-size: 0.8rem; }
+        .log-level { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; }
+        .log-info { background-color: rgba(23, 162, 184, 0.1); color: var(--cor-info); }
+        .log-success { background-color: rgba(40, 167, 69, 0.1); color: var(--cor-sucesso); }
+        .log-warning { background-color: rgba(255, 193, 7, 0.1); color: var(--cor-aviso); }
+        .log-danger { background-color: rgba(220, 53, 69, 0.1); color: var(--cor-perigo); }
+        .pagination { margin-top: 20px; text-align: center; }
+        .pagination a { color: var(--cor-laranja-blz); text-decoration: none; padding: 8px 12px; margin: 0 2px; border-radius: 4px; }
+        .pagination a:hover { background-color: var(--cor-fundo); }
+        .pagination .active { font-weight: bold; background-color: var(--cor-laranja-blz); color: white; }
+    </style>
+</head>
+<body>
+    <header class="top-bar">
+        <div class="top-bar-logo">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Logotipo da Empresa">
+            <h1>Controle de Equipamentos</h1>
+        </div>
+        <div class="top-bar-nav">
+            <a href="{{ url_for('index') }}" class="nav-link link-bancada">Bancada</a>
+            <a href="{{ url_for('manage_users') }}" class="nav-link link-admin">Gerenciar Usuários</a>
+            <a href="{{ url_for('logout') }}" class="nav-link logout-link">Sair ({{ current_user.username }})</a>
+        </div>
+    </header>
+
+    <main class="page-container">
+        <section class="card">
+            <h1>📜 Logs do Sistema</h1>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Data/Hora</th>
+                        <th>Utilizador</th>
+                        <th>Nível</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs.items %}
+                    <tr>
+                        <td>{{ log.timestamp.strftime('%d/%m/%Y %H:%M:%S') }}</td>
+                        <td>{{ log.user.username if log.user else 'Sistema' }}</td>
+                        <td><span class="log-level log-{{ log.level.lower() }}">{{ log.level }}</span></td>
+                        <td>{{ log.message }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" style="text-align: center; padding: 2em;">Nenhum log encontrado.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Paginação -->
+            <div class="pagination">
+                {% if logs.has_prev %}
+                    <a href="{{ url_for('view_logs', page=logs.prev_num) }}">&laquo; Anterior</a>
+                {% endif %}
+                <span>Página {{ logs.page }} de {{ logs.pages }}.</span>
+                {% if logs.has_next %}
+                    <a href="{{ url_for('view_logs', page=logs.next_num) }}">Próxima &raquo;</a>
+                {% endif %}
+            </div>
+        </section>
+    </main>
+</body>
+</html>

@@ -4,6 +4,7 @@ Versão final refatorada, consolidando todas as funcionalidades e correções.
 """
 import os
 import sys
+import base64
 from datetime import datetime, date, timezone, timedelta
 from functools import wraps
 from typing import Optional
@@ -20,6 +21,7 @@ from flask import (
 )
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import or_
+from weasyprint import HTML
 from flask_login import (
     LoginManager,
     UserMixin,
@@ -61,6 +63,16 @@ login_manager.login_message_category = "info"
 # -------------------------
 # Helpers e utilitários
 # -------------------------
+def get_logo_base64():
+    """Lê o arquivo de logo e o converte para Base64 para embutir no PDF."""
+    try:
+        logo_path = os.path.join(app.root_path, 'static', 'logo.png')
+        with open(logo_path, 'rb') as f:
+            return base64.b64encode(f.read()).decode('utf-8')
+    except FileNotFoundError:
+        app.logger.warning("Ficheiro 'logo.png' não encontrado na pasta 'static'.")
+        return None
+
 def get_brasil_datetime():
     """Retorna o datetime atual no fuso horário de São Paulo (UTC-3)."""
     brasil_tz = timezone(timedelta(hours=-3))
@@ -78,6 +90,8 @@ def safe_commit() -> bool:
 
 def format_timedelta(delta: timedelta) -> str:
     """Formata um timedelta para algo legível como: '2d 3h 4m', '3h 12m' ou '45m'."""
+    if not isinstance(delta, timedelta):
+        return "N/A"
     total_seconds = int(delta.total_seconds())
     days, seconds_remaining = divmod(total_seconds, 86400)
     hours, minutes_rem = divmod(seconds_remaining, 3600)
@@ -90,7 +104,7 @@ def format_timedelta(delta: timedelta) -> str:
     return f"{minutes}m"
 
 def admin_required(func):
-    """Decorator para restringir acesso a administradores (role='admin')."""
+    """Decorator para restringir acesso a administradores (role='master')."""
     @wraps(func)
     def wrapper(*args, **kwargs):
         if not current_user.is_authenticated or not current_user.is_admin:
@@ -98,6 +112,18 @@ def admin_required(func):
         return func(*args, **kwargs)
     return wrapper
 
+def add_log(level: str, message: str):
+    """Adiciona um novo registo de log ao banco de dados."""
+    try:
+        log_entry = Log(
+            level=level,
+            message=message,
+            user_id=current_user.id if current_user.is_authenticated else None
+        )
+        db.session.add(log_entry)
+        safe_commit()
+    except Exception as e:
+        app.logger.error(f"Falha ao registar log: {e}")
 
 # -------------------------
 # Models
@@ -109,10 +135,11 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(256), nullable=False)
     role = db.Column(db.String(20), nullable=False, default="suporte")
     testes = db.relationship('Teste', backref='tester', lazy=True)
+    logs = db.relationship('Log', backref='user', lazy=True)
 
     @property
     def is_admin(self) -> bool:
-        return self.role == "admin"
+        return self.role == "master"
 
     def set_password(self, password: str) -> None:
         self.password_hash = generate_password_hash(password)
@@ -128,13 +155,7 @@ class Equipamento(db.Model):
     serial = db.Column(db.String(100), unique=True, nullable=False)
     status_atual = db.Column(db.String(50), default="Aguardando Teste")
     data_cadastro = db.Column(db.DateTime, default=get_brasil_datetime)
-    testes = db.relationship(
-        "Teste",
-        backref="equipamento",
-        lazy=True,
-        order_by=lambda: Teste.data_teste.desc(),
-        cascade="all, delete-orphan",
-    )
+    testes = db.relationship("Teste", backref="equipamento", lazy=True, order_by=lambda: Teste.data_teste.desc(), cascade="all, delete-orphan")
 
 class Teste(db.Model):
     __tablename__ = "teste"
@@ -147,44 +168,13 @@ class Teste(db.Model):
     equipamento_id = db.Column(db.Integer, db.ForeignKey("equipamento.id"), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-
-# -------------------------
-# Util: filtros de busca
-# -------------------------
-def get_filtered_equipamentos_query(base_query):
-    query_busca = request.args.get("q", "").strip()
-    filtro_status = request.args.get("filtro_status", "").strip()
-    filtro_dia = request.args.get("filtro_dia", "").strip()
-    filtro_mes = request.args.get("filtro_mes", "").strip()
-
-    if filtro_status:
-        base_query = base_query.filter(Equipamento.status_atual == filtro_status)
-
-    if filtro_dia or filtro_mes:
-        base_query = base_query.join(Teste)
-        try:
-            if filtro_dia:
-                dia = datetime.strptime(filtro_dia, "%Y-%m-%d").date()
-                base_query = base_query.filter(db.func.date(Teste.data_teste) == dia)
-            elif filtro_mes:
-                mes_dt = datetime.strptime(filtro_mes, "%Y-%m")
-                base_query = base_query.filter(
-                    db.extract("year", Teste.data_teste) == mes_dt.year,
-                    db.extract("month", Teste.data_teste) == mes_dt.month,
-                )
-        except (ValueError, TypeError):
-            app.logger.warning("Filtro de data inválido: %s / %s", filtro_dia, filtro_mes)
-
-    if query_busca:
-        termo = f"%{query_busca}%"
-        base_query = base_query.filter(
-            or_(
-                Equipamento.serial.ilike(termo),
-                Equipamento.modelo.ilike(termo),
-                Equipamento.tipo.ilike(termo),
-            )
-        )
-    return base_query
+class Log(db.Model):
+    __tablename__ = "log"
+    id = db.Column(db.Integer, primary_key=True)
+    timestamp = db.Column(db.DateTime, default=get_brasil_datetime, nullable=False)
+    level = db.Column(db.String(20), nullable=False) # INFO, SUCCESS, WARNING, DANGER
+    message = db.Column(db.String(500), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
 
 # -------------------------
@@ -197,7 +187,6 @@ def load_user(user_id: str) -> Optional[User]:
     except (ValueError, TypeError):
         return None
 
-
 # -------------------------
 # Rotas de autenticação
 # -------------------------
@@ -205,7 +194,6 @@ def load_user(user_id: str) -> Optional[User]:
 def login():
     if current_user.is_authenticated:
         return redirect(url_for("index"))
-
     if request.method == "POST":
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
@@ -213,14 +201,17 @@ def login():
         user = User.query.filter_by(username=username).first()
         if user and user.check_password(password):
             login_user(user, remember=remember)
+            add_log("INFO", f"Utilizador '{user.username}' realizou login.")
             return redirect(url_for("index"))
-        flash("Usuário ou senha inválidos.", "danger")
+        flash("Utilizador ou senha inválidos.", "danger")
     return render_template("login.html")
 
 @app.route("/logout")
 @login_required
 def logout():
+    username = current_user.username
     logout_user()
+    add_log("INFO", f"Utilizador '{username}' realizou logout.")
     flash("Você foi desconectado com sucesso.", "success")
     return redirect(url_for("login"))
 
@@ -231,14 +222,11 @@ def logout():
 @app.route("/")
 @login_required
 def index():
-    """Página inicial com lógica de abas e permissões."""
     if current_user.role == 'agendamento':
         return redirect(url_for('pesquisar'))
     
-    # Lógica para as abas
-    todos_equipamentos = Equipamento.query.order_by(Equipamento.id.desc()).all()
-    equipamentos_nao_testados = [eq for eq in todos_equipamentos if not eq.testes]
-    equipamentos_testados = [eq for eq in todos_equipamentos if eq.testes]
+    equipamentos_nao_testados = Equipamento.query.filter_by(status_atual="Aguardando Teste").order_by(Equipamento.id.desc()).all()
+    equipamentos_testados = Equipamento.query.filter(Equipamento.status_atual != "Aguardando Teste").order_by(Equipamento.id.desc()).all()
     
     return render_template(
         "index.html",
@@ -251,23 +239,36 @@ def index():
 def add_equipamento():
     if current_user.role == 'agendamento': abort(403)
     serial = (request.form.get("serial") or "").strip()
-    tipo = (request.form.get("tipo") or "").strip()
-    modelo = (request.form.get("modelo") or "").strip()
-
-    if not all([serial, tipo, modelo]):
-        flash("Todos os campos (Tipo, Modelo, MAC) são obrigatórios.", "danger")
+    
+    if not serial:
+        flash("O campo MAC é obrigatório.", "danger")
         return redirect(url_for("index"))
 
     existente = Equipamento.query.filter_by(serial=serial).first()
     if existente:
-        flash(f'Equipamento "{serial}" já existe e está na aba "Com Histórico".', "info")
+        existente.status_atual = "Aguardando Teste"
+        if safe_commit():
+            add_log("INFO", f"Solicitado re-teste para equipamento: {serial}.")
+            flash(f'Equipamento "{serial}" pronto para re-teste na aba "Aguardando Teste".', "info")
+        else:
+            add_log("DANGER", f"Falha ao solicitar re-teste para: {serial}.")
+            flash("Erro ao solicitar re-teste.", "danger")
     else:
+        tipo = (request.form.get("tipo") or "").strip()
+        modelo = (request.form.get("modelo") or "").strip()
+        if not tipo or not modelo:
+            flash("Para um equipamento novo, Tipo e Modelo também são obrigatórios.", "danger")
+            return redirect(url_for("index"))
+            
         novo = Equipamento(serial=serial, tipo=tipo, modelo=modelo)
         db.session.add(novo)
         if safe_commit():
-            flash(f'Novo equipamento "{serial}" cadastrado com sucesso! Ele está na aba "Aguardando Teste".', "success")
+            add_log("SUCCESS", f"Novo equipamento registado: {serial} ({tipo}/{modelo}).")
+            flash(f'Novo equipamento "{serial}" registado! Ele está na aba "Aguardando Teste".', "success")
         else:
-            flash("Erro ao cadastrar equipamento.", "danger")
+            add_log("DANGER", f"Falha ao registar novo equipamento: {serial}.")
+            flash("Erro ao registar equipamento.", "danger")
+            
     return redirect(url_for("index"))
 
 @app.route("/add_test/<int:equip_id>", methods=["POST"])
@@ -278,7 +279,7 @@ def add_test(equip_id: int):
     status = request.form.get("status", "").strip()
 
     if not status:
-        flash("O campo 'status' é obrigatório.", "danger")
+        flash("O campo 'Resultado' é obrigatório.", "danger")
         return redirect(url_for("index"))
 
     novo = Teste(
@@ -292,8 +293,10 @@ def add_test(equip_id: int):
     equipamento.status_atual = status
     db.session.add(novo)
     if safe_commit():
+        add_log("SUCCESS", f"Teste '{status}' registado para equipamento: {equipamento.serial}.")
         flash(f'Teste para "{equipamento.serial}" salvo com sucesso!', "success")
     else:
+        add_log("DANGER", f"Falha ao salvar teste para: {equipamento.serial}.")
         flash("Erro ao salvar teste.", "danger")
     return redirect(url_for("index"))
 
@@ -301,16 +304,37 @@ def add_test(equip_id: int):
 # -------------------------
 # Pesquisa, histórico e exclusões
 # -------------------------
+def get_filtered_equipamentos_query(base_query):
+    query_busca = request.args.get("q", "").strip()
+    filtro_status = request.args.get("filtro_status", "").strip()
+    filtro_dia = request.args.get("filtro_dia", "").strip()
+    filtro_mes = request.args.get("filtro_mes", "").strip()
+    if filtro_status:
+        base_query = base_query.filter(Equipamento.status_atual == filtro_status)
+    if filtro_dia or filtro_mes:
+        base_query = base_query.join(Teste)
+        try:
+            if filtro_dia:
+                dia = datetime.strptime(filtro_dia, "%Y-%m-%d").date()
+                base_query = base_query.filter(db.func.date(Teste.data_teste) == dia)
+            elif filtro_mes:
+                mes_dt = datetime.strptime(filtro_mes, "%Y-%m")
+                base_query = base_query.filter(db.extract("year", Teste.data_teste) == mes_dt.year, db.extract("month", Teste.data_teste) == mes_dt.month)
+        except (ValueError, TypeError):
+            app.logger.warning("Filtro de data inválido: %s / %s", filtro_dia, filtro_mes)
+    if query_busca:
+        termo = f"%{query_busca}%"
+        base_query = base_query.filter(or_(Equipamento.serial.ilike(termo), Equipamento.modelo.ilike(termo), Equipamento.tipo.ilike(termo)))
+    return base_query
+
 @app.route("/pesquisar")
 @login_required
 def pesquisar():
     base_query = Equipamento.query
     query_com_filtros = get_filtered_equipamentos_query(base_query)
     resultados = query_com_filtros.order_by(Equipamento.id.desc()).all()
-    
     if current_user.role == 'agendamento':
         return render_template("agendamento_index.html", equipamentos=resultados)
-        
     return render_template(
         "pesquisa.html",
         equipamentos=resultados,
@@ -324,32 +348,26 @@ def pesquisar():
 @login_required
 def historico(equip_id: int):
     equipamento = Equipamento.query.get_or_404(equip_id)
-    testes_ordenados = sorted(equipamento.testes, key=lambda t: t.data_teste)
-    historico_processado, data_anterior = [], equipamento.data_cadastro
-
-    for teste in testes_ordenados:
-        duracao = teste.data_teste - data_anterior
-        historico_processado.append({"teste": teste, "tempo_em_campo": format_timedelta(duracao)})
-        data_anterior = teste.data_teste
-
-    historico_processado.reverse()
-    return render_template("historico.html", equipamento=equipamento, historico=historico_processado)
+    return render_template("historico.html", equipamento=equipamento, historico=equipamento.testes)
 
 @app.route("/delete/<int:id>", methods=["POST"])
 @login_required
 def delete(id: int):
     if current_user.role == 'agendamento': abort(403)
     equipamento = Equipamento.query.get_or_404(id)
+    serial = equipamento.serial
     db.session.delete(equipamento)
     if safe_commit():
-        flash("Equipamento e histórico foram deletados.", "success")
+        add_log("WARNING", f"Equipamento '{serial}' e todo o seu histórico foram apagados.")
+        flash("Equipamento e histórico foram apagados.", "success")
     else:
-        flash("Erro ao deletar equipamento.", "danger")
+        add_log("DANGER", f"Falha ao apagar equipamento '{serial}'.")
+        flash("Erro ao apagar equipamento.", "danger")
     return redirect(url_for("pesquisar"))
 
 
 # -------------------------
-# Administração de usuários
+# Administração
 # -------------------------
 @app.route("/admin/users")
 @login_required
@@ -365,22 +383,21 @@ def add_user():
     username = (request.form.get("username") or "").strip()
     password = request.form.get("password", "")
     role = request.form.get("role", "suporte")
-
     if not username or not password:
-        flash("Nome de usuário e senha são obrigatórios.", "danger")
+        flash("Nome de utilizador e senha são obrigatórios.", "danger")
         return redirect(url_for("manage_users"))
-
     if User.query.filter_by(username=username).first():
-        flash("Este nome de usuário já existe.", "warning")
+        flash("Este nome de utilizador já existe.", "warning")
         return redirect(url_for("manage_users"))
-
     novo = User(username=username, role=role)
     novo.set_password(password)
     db.session.add(novo)
     if safe_commit():
-        flash(f'Usuário "{username}" criado com sucesso.', "success")
+        add_log("SUCCESS", f"Novo utilizador '{username}' (role: {role}) foi criado.")
+        flash(f'Utilizador "{username}" criado com sucesso.', "success")
     else:
-        flash("Erro ao criar usuário.", "danger")
+        add_log("DANGER", f"Falha ao criar utilizador '{username}'.")
+        flash("Erro ao criar utilizador.", "danger")
     return redirect(url_for("manage_users"))
 
 @app.route("/admin/users/delete/<int:user_id>", methods=["POST"])
@@ -388,15 +405,17 @@ def add_user():
 @admin_required
 def delete_user(user_id: int):
     user_to_delete = User.query.get_or_404(user_id)
-    if user_to_delete.role == 'admin':
-        flash("Não é possível deletar o usuário administrador.", "danger")
+    username = user_to_delete.username
+    if user_to_delete.role == 'master':
+        flash("Não é possível apagar o utilizador master.", "danger")
         return redirect(url_for("manage_users"))
-
     db.session.delete(user_to_delete)
     if safe_commit():
-        flash("Usuário deletado com sucesso.", "success")
+        add_log("WARNING", f"Utilizador '{username}' foi apagado.")
+        flash("Utilizador apagado com sucesso.", "success")
     else:
-        flash("Erro ao deletar usuário.", "danger")
+        add_log("DANGER", f"Falha ao apagar utilizador '{username}'.")
+        flash("Erro ao apagar utilizador.", "danger")
     return redirect(url_for("manage_users"))
 
 @app.route('/admin/users/reset_password/<int:user_id>', methods=['POST'])
@@ -404,21 +423,30 @@ def delete_user(user_id: int):
 @admin_required
 def reset_user_password(user_id: int):
     user_to_reset = User.query.get_or_404(user_id)
+    username = user_to_reset.username
     new_password = request.form.get('new_password')
-
-    if user_to_reset.role == 'admin':
-        flash('Não é possível resetar a senha do usuário administrador.', 'danger')
+    if user_to_reset.role == 'master':
+        flash('Não é possível resetar a senha do utilizador master por aqui.', 'danger')
         return redirect(url_for('manage_users'))
     if not new_password:
         flash('A nova senha não pode estar em branco.', 'danger')
         return redirect(url_for('manage_users'))
-
     user_to_reset.set_password(new_password)
     if safe_commit():
-        flash(f'Senha do usuário "{user_to_reset.username}" foi resetada com sucesso.', 'success')
+        add_log("WARNING", f"Senha do utilizador '{username}' foi resetada.")
+        flash(f'Senha do utilizador "{username}" foi resetada com sucesso.', 'success')
     else:
+        add_log("DANGER", f"Falha ao resetar senha do utilizador '{username}'.")
         flash('Erro ao resetar a senha.', 'danger')
     return redirect(url_for('manage_users'))
+
+@app.route('/admin/logs')
+@login_required
+@admin_required
+def view_logs():
+    page = request.args.get('page', 1, type=int)
+    logs = Log.query.order_by(Log.timestamp.desc()).paginate(page=page, per_page=50)
+    return render_template('admin_logs.html', logs=logs)
 
 
 # -------------------------
@@ -427,156 +455,21 @@ def reset_user_password(user_id: int):
 @app.route("/export/pesquisa/pdf")
 @login_required
 def export_pesquisa_pdf():
-    """Versão simplificada sem PDF"""
-    base_query = Equipamento.query
-    query_com_filtros = get_filtered_equipamentos_query(base_query)
-    resultados = query_com_filtros.order_by(Equipamento.id.desc()).all()
-    
-    # Gera HTML em vez de PDF
-    html_content = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="UTF-8">
-        <title>Relatório de Equipamentos</title>
-        <style>
-            body {{ font-family: Arial; margin: 20px; }}
-            h1 {{ color: #333; text-align: center; }}
-            table {{ width: 100%; border-collapse: collapse; margin: 20px 0; }}
-            th, td {{ border: 1px solid #ddd; padding: 10px; text-align: left; }}
-            th {{ background-color: #f5f5f5; }}
-            .header {{ text-align: center; margin-bottom: 30px; }}
-            .footer {{ margin-top: 30px; font-size: 12px; color: #666; }}
-        </style>
-    </head>
-    <body>
-        <div class="header">
-            <h1>RELATÓRIO DE EQUIPAMENTOS</h1>
-            <p>Data: {datetime.now().strftime('%d/%m/%Y %H:%M')}</p>
-            <p>Total de equipamentos: {len(resultados)}</p>
-        </div>
-        
-        <table>
-            <thead>
-                <tr>
-                    <th>Serial</th>
-                    <th>Tipo</th>
-                    <th>Modelo</th>
-                    <th>Status</th>
-                    <th>Data Cadastro</th>
-                </tr>
-            </thead>
-            <tbody>
-                {"".join([f'''
-                <tr>
-                    <td>{eq.serial}</td>
-                    <td>{eq.tipo}</td>
-                    <td>{eq.modelo}</td>
-                    <td>{eq.status_atual}</td>
-                    <td>{eq.data_cadastro.strftime('%d/%m/%Y')}</td>
-                </tr>
-                ''' for eq in resultados])}
-            </tbody>
-        </table>
-        
-        <div class="footer">
-            <p>Relatório gerado pelo Sistema de Controle de Testes</p>
-            <p><strong>Dica:</strong> Use Ctrl+P para imprimir ou salvar como PDF</p>
-        </div>
-    </body>
-    </html>
-    """
-    
-    response = make_response(html_content)
-    response.headers["Content-Type"] = "text/html; charset=utf-8"
-    response.headers["Content-Disposition"] = f"attachment; filename=relatorio_equipamentos_{date.today()}.html"
+    base_query = Equipamento.query; query_com_filtros = get_filtered_equipamentos_query(base_query); resultados = query_com_filtros.order_by(Equipamento.id.desc()).all()
+    logo_b64 = get_logo_base64()
+    html = render_template("relatorio_pesquisa_pdf.html", equipamentos=resultados, now=get_brasil_datetime(), logo_base64=logo_b64)
+    pdf = HTML(string=html).write_pdf(); response = make_response(pdf)
+    response.headers["Content-Type"] = "application/pdf"; response.headers["Content-Disposition"] = f'inline; filename=relatorio_pesquisa_{date.today()}.pdf'
     return response
 
 @app.route("/historico/<int:equip_id>/export/pdf")
 @login_required
 def export_historico_pdf(equip_id: int):
-    """Versão simplificada sem PDF"""
     equipamento = Equipamento.query.get_or_404(equip_id)
-    testes_ordenados = sorted(equipamento.testes, key=lambda t: t.data_teste)
-    historico_processado, data_anterior = [], equipamento.data_cadastro
-
-    for teste in testes_ordenados:
-        duracao = teste.data_teste - data_anterior
-        historico_processado.append({"teste": teste, "tempo_em_campo": format_timedelta(duracao)})
-        data_anterior = teste.data_teste
-
-    historico_processado.reverse()
-    html = render_template(
-        "relatorio_historico_pdf.html",
-        equipamento=equipamento,
-        historico=historico_processado,
-        now=get_brasil_datetime(),
-    )
-    pdf = HTML(string=html).write_pdf()
-    response = make_response(pdf)
-    response.headers["Content-Type"] = "application/pdf"
-    response.headers["Content-Disposition"] = f'inline; filename=historico_{equipamento.serial}.pdf'
-    
-    html_content = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="UTF-8">
-        <title>Histórico - {equipamento.serial}</title>
-        <style>
-            body {{ font-family: Arial; margin: 20px; }}
-            h1 {{ color: #333; }}
-            .info {{ background: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0; }}
-            table {{ width: 100%; border-collapse: collapse; }}
-            th, td {{ border: 1px solid #ddd; padding: 10px; text-align: left; }}
-            th {{ background-color: #f5f5f5; }}
-        </style>
-    </head>
-    <body>
-        <h1>HISTÓRICO DE TESTES</h1>
-        
-        <div class="info">
-            <h3>Equipamento: {equipamento.serial}</h3>
-            <p><strong>Tipo:</strong> {equipamento.tipo}</p>
-            <p><strong>Modelo:</strong> {equipamento.modelo}</p>
-            <p><strong>Status Atual:</strong> {equipamento.status_atual}</p>
-        </div>
-        
-        <h3>Testes Realizados ({len(testes_ordenados)})</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Data</th>
-                    <th>Status</th>
-                    <th>Velocidade</th>
-                    <th>Sinal</th>
-                    <th>Observações</th>
-                </tr>
-            </thead>
-            <tbody>
-                {"".join([f'''
-                <tr>
-                    <td>{teste.data_teste.strftime('%d/%m/%Y %H:%M')}</td>
-                    <td>{teste.status}</td>
-                    <td>{teste.velocidade_teste or '-'}</td>
-                    <td>{teste.sinal_dbm or '-'}</td>
-                    <td>{teste.observacoes or '-'}</td>
-                </tr>
-                ''' for teste in reversed(testes_ordenados)])}
-            </tbody>
-        </table>
-        
-        <div style="margin-top: 30px; font-size: 12px; color: #666;">
-            <p>Relatório gerado em {datetime.now().strftime('%d/%m/%Y %H:%M')}</p>
-            <p><strong>Dica:</strong> Use Ctrl+P para imprimir ou salvar como PDF</p>
-        </div>
-    </body>
-    </html>
-    """
-    
-    response = make_response(html_content)
-    response.headers["Content-Type"] = "text/html; charset=utf-8"
-    response.headers["Content-Disposition"] = f"attachment; filename=historico_{equipamento.serial}.html"
+    logo_b64 = get_logo_base64()
+    html = render_template("relatorio_historico_pdf.html", equipamento=equipamento, historico=equipamento.testes, now=get_brasil_datetime(), logo_base64=logo_b64)
+    pdf = HTML(string=html).write_pdf(); response = make_response(pdf)
+    response.headers["Content-Type"] = "application/pdf"; response.headers["Content-Disposition"] = f'inline; filename=historico_{equipamento.serial}.pdf'
     return response
 
 
@@ -584,43 +477,29 @@ def export_historico_pdf(equip_id: int):
 # CLI helpers
 # -------------------------
 @app.cli.command("init-db")
-def init_db_command():
-    """Cria ou recria as tabelas do banco de dados."""
-    db.create_all()
-    print("✅ Banco de dados inicializado com sucesso.")
+def init_db_command(): db.create_all(); print("✅ Banco de dados inicializado com sucesso.")
 
-@app.cli.command("create-admin")
-def create_admin_command():
-    """Cria o usuário 'admin' inicial se ele não existir."""
-    if User.query.filter_by(username="admin").first():
-        print("ℹ️ Usuário 'admin' já existe.")
-        return
-    admin_user = User(username="admin", role="admin")
-    admin_user.set_password("105391@Lu")
-    db.session.add(admin_user)
-    if safe_commit():
-        print("✅ Usuário 'admin' criado com a senha segura.")
-    else:
-        print("❌ Erro ao criar usuário administrador.")
+@app.cli.command("create-master")
+def create_master_command():
+    if User.query.filter_by(username="master").first(): print("ℹ️ Utilizador 'master' já existe."); return
+    master_user = User(username="master", role="master")
+    master_user.set_password("105391@Lu")
+    db.session.add(master_user)
+    if safe_commit(): print("✅ Utilizador 'master' criado com a senha segura.")
+    else: print("❌ Erro ao criar utilizador master.")
 
 
 # -------------------------
 # Error handlers
 # -------------------------
 @app.errorhandler(403)
-def forbidden_error(error):
-    return render_template("403.html"), 403
-
+def forbidden_error(error): return render_template("403.html"), 403
 @app.errorhandler(404)
-def not_found_error(error):
-    return render_template("404.html"), 404
-
+def not_found_error(error): return render_template("404.html"), 404
 @app.errorhandler(500)
 def internal_error(error):
-    db.session.rollback()
-    return render_template("500.html"), 500
+    db.session.rollback(); return render_template("500.html"), 500
 
 if __name__ == "__main__":
     app.run(debug=True)
-
 
