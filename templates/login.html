@@ -1,447 +1,296 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Sistema de Equipamento Resetados</title>
+    <title>Login - Controle de Equipamentos</title>
     <style>
-        :root { 
-            --cor-primaria: #007bff; 
-            --cor-primaria-escura: #0056b3;
-            --cor-sucesso: #28a745;
-            --cor-perigo: #dc3545;
-            --cor-fundo: #f8f9fa; 
-            --cor-texto: #333;
-            --cor-texto-secundario: #555;
-            --cor-borda: #ccc;
-            --sombra: 0 4px 12px rgba(0,0,0,0.1);
-            --sombra-foco: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        :root {
+            --cor-laranja-blz: #f15a24;
+            --cor-amarelo-blz: #fdb913;
+            --gradiente-blz: linear-gradient(90deg, var(--cor-amarelo-blz), var(--cor-laranja-blz));
+            
+            /* Tema Claro (Padrão) */
+            --cor-fundo: #f0f2f5;
+            --cor-fundo-card: #ffffff;
+            --cor-texto-principal: #212529;
+            --cor-texto-secundario: #6c757d;
+            --cor-borda: #dee2e6;
+            --sombra: 0 4px 25px rgba(0, 0, 0, 0.1);
+
+            /* Tema Escuro */
+            --cor-fundo-dark: #121212;
+            --cor-fundo-card-dark: #1e1e1e;
+            --cor-texto-principal-dark: #e0e0e0;
+            --cor-texto-secundario-dark: #888888;
+            --cor-borda-dark: #444444;
+        }
+
+        [data-theme="dark"] {
+            --cor-fundo: var(--cor-fundo-dark);
+            --cor-fundo-card: var(--cor-fundo-card-dark);
+            --cor-texto-principal: var(--cor-texto-principal-dark);
+            --cor-texto-secundario: var(--cor-texto-secundario-dark);
+            --cor-borda: var(--cor-borda-dark);
         }
         
-        * {
-            box-sizing: border-box;
-        }
-        
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            min-height: 100vh; 
-            margin: 0; 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            background-attachment: fixed;
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            background-color: var(--cor-fundo);
+            color: var(--cor-texto-principal);
+            transition: background-color 0.3s, color 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
             padding: 20px;
         }
         
-        .login-container { 
-            background-color: #fff; 
-            padding: 40px; 
-            border-radius: 12px; 
-            box-shadow: var(--sombra); 
-            width: 100%; 
-            max-width: 420px; 
+        .login-card {
+            background-color: var(--cor-fundo-card);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: var(--sombra);
+            width: 100%;
+            max-width: 420px;
             text-align: center;
-            position: relative;
-            overflow: hidden;
+            transition: background-color 0.3s;
         }
-        
-        .login-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--cor-primaria), var(--cor-sucesso));
+
+        .logo {
+            height: 190px;
+            margin-bottom: 60px;
         }
-        
-        .logo { 
-            max-width: 180px; 
-            height: auto; 
-            margin-bottom: 25px;
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-            transition: transform 0.3s ease;
-        }
-        
-        .logo:hover {
-            transform: scale(1.05);
-        }
-        
-        h1 { 
-            color: var(--cor-texto); 
-            margin-bottom: 30px; 
-            font-size: 1.8rem;
+
+        .system-title {
+            font-size: 1.5rem;
             font-weight: 600;
+            margin: 0 0 10px 0;
+            color: var(--cor-texto-principal);
         }
-        
-        .form-group { 
-            margin-bottom: 24px; 
-            text-align: left; 
-        }
-        
-        .form-group label { 
-            display: block; 
-            margin-bottom: 8px; 
-            font-weight: 500; 
+
+        .form-title {
             color: var(--cor-texto-secundario);
-            font-size: 0.95rem;
+            font-size: 1.1rem;
+            font-weight: 400;
+            margin-top: 0;
+            margin-bottom: 30px;
         }
         
-        .form-group input { 
-            width: 100%; 
-            padding: 12px 15px; 
-            border: 1px solid var(--cor-borda); 
-            border-radius: 6px; 
-            box-sizing: border-box;
+        .form-group {
+            margin-bottom: 24px;
+            text-align: left;
+            position: relative;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--cor-texto-secundario);
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--cor-borda);
+            border-radius: 6px;
             font-size: 1rem;
+            background-color: var(--cor-fundo);
+            color: var(--cor-texto-principal);
             transition: all 0.3s ease;
         }
         
         .form-group input:focus {
             outline: none;
-            border-color: var(--cor-primaria);
-            box-shadow: var(--sombra-foco);
+            border-color: var(--cor-laranja-blz);
+            box-shadow: 0 0 0 3px rgba(241, 90, 36, 0.2);
         }
         
-        .form-group input:invalid:not(:focus):not(:placeholder-shown) {
-            border-color: var(--cor-perigo);
-        }
-        
-        .btn-login { 
-            width: 100%; 
-            padding: 14px; 
-            border: none; 
-            border-radius: 6px; 
-            background-color: var(--cor-primaria); 
-            color: white; 
-            font-size: 1.1rem; 
-            font-weight: 600; 
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 6px;
+            background: var(--gradiente-blz);
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-top: 10px;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .btn-login:hover {
-            background-color: var(--cor-primaria-escura);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-        
-        .btn-login:active {
-            transform: translateY(0);
-        }
-        
-        .btn-login:disabled {
-            background-color: #6c757d;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-        
-        .btn-login.loading::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 20px;
-            height: 20px;
-            margin: -10px 0 0 -10px;
-            border: 2px solid transparent;
-            border-top: 2px solid #ffffff;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .flash-messages { 
-            list-style-type: none; 
-            padding: 0; 
-            margin-bottom: 25px; 
-            text-align: left; 
-        }
-        
-        .flash-messages li { 
-            padding: 12px 15px; 
-            border-radius: 6px; 
-            margin-bottom: 12px; 
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 10px;
         }
         
-        .flash-danger { 
-            background-color: #f8d7da; 
-            color: #721c24; 
-            border: 1px solid #f5c6cb; 
+        .btn-login:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(241, 90, 36, 0.3);
+        }
+
+        .btn-login:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .options-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            font-size: 0.9em;
         }
         
-        .flash-success { 
-            background-color: #d4edda; 
-            color: #155724; 
-            border: 1px solid #c3e6cb; 
-        }
-        
-        .flash-info { 
-            background-color: #d1ecf1; 
-            color: #0c5460; 
-            border: 1px solid #bee5eb; 
-        }
-        
-        .flash-warning {
-            background-color: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
-        }
-        
-        .icon {
-            font-size: 1.2em;
-        }
-        
-        .password-container {
-            position: relative;
-        }
-        
-        .toggle-password {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--cor-texto-secundario);
             cursor: pointer;
-            color: var(--cor-texto-secundario);
-            padding: 5px;
         }
-        
-        .toggle-password:focus {
-            outline: none;
-            color: var(--cor-primaria);
-        }
-        
-        .system-info {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #e9ecef;
-            color: var(--cor-texto-secundario);
-            font-size: 0.85rem;
+
+        .remember-me input {
+            cursor: pointer;
         }
         
         .forgot-password {
-            text-align: center;
-            margin-top: 15px;
-        }
-        
-        .forgot-password a {
-            color: var(--cor-primaria);
+            color: var(--cor-laranja-blz);
             text-decoration: none;
-            font-size: 0.9rem;
+            font-weight: 500;
         }
         
-        .forgot-password a:hover {
+        .forgot-password:hover {
             text-decoration: underline;
         }
         
-        @media (max-width: 480px) {
-            .login-container {
-                padding: 30px 25px;
-            }
-            
-            h1 {
-                font-size: 1.5rem;
-            }
-            
-            .logo {
-                max-width: 140px;
-            }
+        /* Mensagens de Feedback */
+        .flash-messages { list-style-type: none; padding: 0; margin-bottom: 25px; text-align: left; }
+        .flash-messages li { padding: 12px 15px; border-radius: 6px; }
+        .flash-danger { background-color: #f8d7da; color: #721c24; }
+
+        /* Spinner de Carregamento */
+        .spinner {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid #ffffff;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            animation: spin 1s linear infinite;
+            display: none; /* Escondido por padrão */
         }
-        
-        @media (prefers-reduced-motion: reduce) {
-            * {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-            }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Toggle de Tema */
+        .theme-switch-container { 
+            position: absolute; 
+            bottom: 20px; 
+            right: 20px; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            color: var(--cor-texto-secundario);
+            background-color: var(--cor-fundo-card);
+            padding: 8px 12px;
+            border-radius: 20px;
+            box-shadow: var(--sombra);
+            z-index: 10;
         }
+        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background: var(--gradiente-blz); }
+        input:checked + .slider:before { transform: translateX(20px); }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <!-- Logo da empresa -->
-        <img src="{{ url_for('static', filename='logo.png') }}" 
-             alt="Logotipo da Empresa" 
-             class="logo"
-             onerror="this.style.display='none'">
-        
-        <h1>Acesso ao Sistema</h1>
-        
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <ul class="flash-messages" aria-live="polite">
-                {% for category, message in messages %}
-                    <li class="flash-{{ category }}">
-                        <span class="icon">
-                            {% if category == 'danger' %}⚠️
-                            {% elif category == 'success' %}✅
-                            {% elif category == 'info' %}ℹ️
-                            {% else %}💡{% endif %}
-                        </span>
-                        {{ message }}
-                    </li>
-                {% endfor %}
-                </ul>
-            {% endif %}
-        {% endwith %}
+    <main class="main-content">
+        <div class="login-card">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Logotipo da Empresa" class="logo">
+            <h1 class="system-title">Controle de Equipamentos</h1>
+            <h2 class="form-title">Acesso ao Sistema</h2>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <ul class="flash-messages">
+                    {% for category, message in messages %}
+                        <li class="flash-{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                    </ul>
+                {% endif %}
+            {% endwith %}
 
-        <form method="POST" action="{{ url_for('login') }}" id="loginForm">
-            <div class="form-group">
-                <label for="username">Usuário</label>
-                <input type="text" 
-                       id="username" 
-                       name="username" 
-                       required 
-                       autocomplete="username"
-                       aria-required="true"
-                       placeholder="Digite seu usuário"
-                       autofocus>
-            </div>
-            
-            <div class="form-group">
-                <label for="password">Senha</label>
-                <div class="password-container">
-                    <input type="password" 
-                           id="password" 
-                           name="password" 
-                           required 
-                           autocomplete="current-password"
-                           aria-required="true"
-                           placeholder="Digite sua senha">
-                    <button type="button" class="toggle-password" aria-label="Mostrar senha">
-                        👁️
-                    </button>
+            <form id="login-form" method="POST" action="{{ url_for('login') }}">
+                <div class="form-group">
+                    <label for="username">Usuário</label>
+                    <input type="text" id="username" name="username" required autofocus>
                 </div>
-            </div>
-            
-            <button type="submit" class="btn-login" id="submitBtn">
-                🔐 Entrar no Sistema
-            </button>
-            
-            <!-- Link para recuperação de senha (futura implementação) -->
-            <div class="forgot-password">
-                <a href="#" onclick="alert('Entre em contato com o administrador do sistema.'); return false;">
-                    Esqueceu sua senha?
-                </a>
-            </div>
-        </form>
-        
-        <div class="system-info">
-            <p>Sistema de Testes de Equipamentos</p>
-            <p>Versão 2.0 • Desenvolvido por Italo Flavio</p>
+                <div class="form-group">
+                    <label for="password">Senha</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <div class="options-group">
+                    <label class="remember-me">
+                        <input type="checkbox" id="remember" name="remember">
+                        Lembrar-me
+                    </label>
+                    <a href="#" onclick="alert('Funcionalidade em desenvolvimento. Entre em contato com o administrador.'); return false;" class="forgot-password">Esqueceu a senha?</a>
+                </div>
+                <button type="submit" class="btn-login" id="login-button">
+                    <div class="spinner" id="spinner"></div>
+                    <span id="button-text">Entrar</span>
+                </button>
+            </form>
         </div>
+    </main>
+
+    <div class="theme-switch-container">
+        <span>☀️</span>
+        <label class="switch">
+            <input type="checkbox" id="theme-toggle">
+            <span class="slider"></span>
+        </label>
+        <span>🌙</span>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const loginForm = document.getElementById('loginForm');
-            const submitBtn = document.getElementById('submitBtn');
-            const togglePasswordBtn = document.querySelector('.toggle-password');
-            const passwordInput = document.getElementById('password');
+            const loginForm = document.getElementById('login-form');
+            const loginButton = document.getElementById('login-button');
+            const spinner = document.getElementById('spinner');
+            const buttonText = document.getElementById('button-text');
             
-            // Foco no campo de usuário
-            const usernameInput = document.getElementById('username');
-            if (usernameInput && !usernameInput.value) {
-                usernameInput.focus();
-            }
-            
-            // Alternar visibilidade da senha
-            if (togglePasswordBtn && passwordInput) {
-                togglePasswordBtn.addEventListener('click', function() {
-                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                    passwordInput.setAttribute('type', type);
-                    
-                    // Alterar ícone e texto alternativo
-                    this.textContent = type === 'password' ? '👁️' : '👁️‍🗨️';
-                    this.setAttribute('aria-label', type === 'password' ? 'Mostrar senha' : 'Ocultar senha');
-                });
-                
-                // Também permitir alternar com Enter/Space
-                togglePasswordBtn.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        this.click();
-                    }
-                });
-            }
-            
-            // Prevenir envio duplo do formulário
             if (loginForm) {
-                loginForm.addEventListener('submit', function(e) {
-                    // Validação básica antes de enviar
-                    const username = document.getElementById('username').value.trim();
-                    const password = document.getElementById('password').value;
-                    
-                    if (!username || !password) {
-                        e.preventDefault();
-                        return;
-                    }
-                    
-                    // Mostrar estado de carregamento
-                    if (submitBtn) {
-                        submitBtn.disabled = true;
-                        submitBtn.classList.add('loading');
-                        submitBtn.innerHTML = 'Autenticando...';
-                        
-                        // Timeout de segurança para reativar o botão se houver erro
-                        setTimeout(() => {
-                            if (submitBtn.disabled) {
-                                submitBtn.disabled = false;
-                                submitBtn.classList.remove('loading');
-                                submitBtn.innerHTML = '🔐 Entrar no Sistema';
-                            }
-                        }, 10000); // 10 segundos
-                    }
+                loginForm.addEventListener('submit', function() {
+                    spinner.style.display = 'block';
+                    buttonText.textContent = 'A entrar...';
+                    loginButton.disabled = true;
                 });
             }
-            
-            // Validação em tempo real
-            const inputs = document.querySelectorAll('input[required]');
-            inputs.forEach(input => {
-                input.addEventListener('blur', function() {
-                    if (!this.value.trim()) {
-                        this.setAttribute('aria-invalid', 'true');
-                    } else {
-                        this.setAttribute('aria-invalid', 'false');
-                    }
-                });
-            });
-            
-            // Permitir envio com Ctrl+Enter
-            document.addEventListener('keydown', function(e) {
-                if (e.ctrlKey && e.key === 'Enter') {
-                    const form = document.getElementById('loginForm');
-                    if (form) {
-                        form.requestSubmit();
-                    }
+
+            const themeToggle = document.getElementById('theme-toggle');
+            const currentTheme = localStorage.getItem('theme');
+
+            if (currentTheme) {
+                document.documentElement.setAttribute('data-theme', currentTheme);
+                if (currentTheme === 'dark') {
+                    themeToggle.checked = true;
+                }
+            }
+
+            themeToggle.addEventListener('change', function() {
+                if (this.checked) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                    localStorage.setItem('theme', 'light');
                 }
             });
-            
-            // Feedback de acessibilidade para screen readers
-            const flashMessages = document.querySelector('.flash-messages');
-            if (flashMessages) {
-                flashMessages.setAttribute('role', 'alert');
-            }
         });
-        
-        // Fallback para caso o JavaScript esteja desabilitado
-        document.getElementById('loginForm').className = 'js-enabled';
     </script>
 </body>
 </html>
+

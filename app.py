@@ -1,6 +1,6 @@
 """
 Aplicação principal Flask para o Sistema de Controle de Testes de Equipamentos.
-Com abas separadas para novos equipamentos e equipamentos existentes.
+Versão final refatorada, consolidando todas as funcionalidades e correções.
 """
 import os
 import sys
@@ -36,12 +36,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 # -------------------------
 app = Flask(__name__)
 
-# Configura caminho do banco de dados para o executável
+# Configura o caminho do banco de dados para funcionar tanto em script quanto em executável
 if getattr(sys, 'frozen', False):
-    # Se está rodando como executável
     base_dir = os.path.dirname(sys.executable)
 else:
-    # Se está rodando como script
     base_dir = os.path.dirname(os.path.abspath(__file__))
 
 db_path = os.path.join(base_dir, 'testes.db')
@@ -65,7 +63,7 @@ login_manager.login_message_category = "info"
 # Helpers e utilitários
 # -------------------------
 def get_brasil_datetime():
-    """Retorna o datetime atual no fuso horário do Brasil (America/Sao_Paulo)"""
+    """Retorna o datetime atual no fuso horário de São Paulo (UTC-3)."""
     brasil_tz = timezone(timedelta(hours=-3))
     return datetime.now(brasil_tz)
 
@@ -82,10 +80,9 @@ def safe_commit() -> bool:
 def format_timedelta(delta: timedelta) -> str:
     """Formata um timedelta para algo legível como: '2d 3h 4m', '3h 12m' ou '45m'."""
     total_seconds = int(delta.total_seconds())
-    days = total_seconds // 86400
-    seconds_remaining = total_seconds % 86400
-    hours = seconds_remaining // 3600
-    minutes = (seconds_remaining % 3600) // 60
+    days, seconds_remaining = divmod(total_seconds, 86400)
+    hours, minutes_rem = divmod(seconds_remaining, 3600)
+    minutes = minutes_rem // 60
 
     if days > 0:
         return f"{days}d {hours}h {minutes}m"
@@ -94,10 +91,10 @@ def format_timedelta(delta: timedelta) -> str:
     return f"{minutes}m"
 
 def admin_required(func):
-    """Decorator simples para restringir acesso a administradores."""
+    """Decorator para restringir acesso a administradores (role='admin')."""
     @wraps(func)
     def wrapper(*args, **kwargs):
-        if not current_user.is_authenticated or not getattr(current_user, "is_admin", False):
+        if not current_user.is_authenticated or not current_user.is_admin:
             abort(403)
         return func(*args, **kwargs)
     return wrapper
@@ -111,7 +108,8 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
-    role = db.Column(db.String(20), nullable=False, default="user")
+    role = db.Column(db.String(20), nullable=False, default="suporte")
+    testes = db.relationship('Teste', backref='tester', lazy=True)
 
     @property
     def is_admin(self) -> bool:
@@ -148,6 +146,7 @@ class Teste(db.Model):
     sinal_dbm = db.Column(db.String(50))
     observacoes = db.Column(db.String(300))
     equipamento_id = db.Column(db.Integer, db.ForeignKey("equipamento.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
 
 # -------------------------
@@ -211,9 +210,10 @@ def login():
     if request.method == "POST":
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
+        remember = True if request.form.get("remember") else False
         user = User.query.filter_by(username=username).first()
         if user and user.check_password(password):
-            login_user(user)
+            login_user(user, remember=remember)
             return redirect(url_for("index"))
         flash("Usuário ou senha inválidos.", "danger")
     return render_template("login.html")
@@ -232,14 +232,17 @@ def logout():
 @app.route("/")
 @login_required
 def index():
-    """Página inicial com abas separadas."""
+    """Página inicial com lógica de abas e permissões."""
+    if current_user.role == 'agendamento':
+        return redirect(url_for('pesquisar'))
+    
+    # Lógica para as abas
     todos_equipamentos = Equipamento.query.order_by(Equipamento.id.desc()).all()
-    equipamentos_nao_testados = [eq for eq in todos_equipamentos if eq.status_atual == "Aguardando Teste"]
+    equipamentos_nao_testados = [eq for eq in todos_equipamentos if not eq.testes]
     equipamentos_testados = [eq for eq in todos_equipamentos if eq.testes]
     
     return render_template(
         "index.html",
-        todos_equipamentos=todos_equipamentos,
         equipamentos_nao_testados=equipamentos_nao_testados,
         equipamentos_testados=equipamentos_testados
     )
@@ -247,38 +250,31 @@ def index():
 @app.route("/add_equipamento", methods=["POST"])
 @login_required
 def add_equipamento():
+    if current_user.role == 'agendamento': abort(403)
     serial = (request.form.get("serial") or "").strip()
     tipo = (request.form.get("tipo") or "").strip()
     modelo = (request.form.get("modelo") or "").strip()
 
-    if not serial or not tipo or not modelo:
-        flash("Todos os campos (Tipo, Modelo, Serial) são obrigatórios.", "danger")
+    if not all([serial, tipo, modelo]):
+        flash("Todos os campos (Tipo, Modelo, MAC) são obrigatórios.", "danger")
         return redirect(url_for("index"))
 
     existente = Equipamento.query.filter_by(serial=serial).first()
-    
     if existente:
-        existente.tipo = tipo
-        existente.modelo = modelo
-        existente.status_atual = "Aguardando Teste"
-        
-        if not safe_commit():
-            flash("Erro ao atualizar equipamento. Tente novamente.", "danger")
-        else:
-            flash(f'Equipamento "{serial}" atualizado e pronto para novo teste!', "success")
+        flash(f'Equipamento "{serial}" já existe e está na aba "Com Histórico".', "info")
     else:
         novo = Equipamento(serial=serial, tipo=tipo, modelo=modelo)
         db.session.add(novo)
-        if not safe_commit():
-            flash("Erro ao cadastrar equipamento. Tente novamente.", "danger")
+        if safe_commit():
+            flash(f'Novo equipamento "{serial}" cadastrado com sucesso! Ele está na aba "Aguardando Teste".', "success")
         else:
-            flash(f'Novo equipamento "{serial}" cadastrado com sucesso!', "success")
-    
+            flash("Erro ao cadastrar equipamento.", "danger")
     return redirect(url_for("index"))
 
 @app.route("/add_test/<int:equip_id>", methods=["POST"])
 @login_required
 def add_test(equip_id: int):
+    if current_user.role == 'agendamento': abort(403)
     equipamento = Equipamento.query.get_or_404(equip_id)
     status = request.form.get("status", "").strip()
 
@@ -291,14 +287,15 @@ def add_test(equip_id: int):
         velocidade_teste=request.form.get("velocidade_teste"),
         sinal_dbm=request.form.get("sinal_dbm"),
         observacoes=request.form.get("observacoes"),
-        equipamento=equipamento
+        equipamento=equipamento,
+        user_id=current_user.id
     )
     equipamento.status_atual = status
     db.session.add(novo)
-    if not safe_commit():
-        flash("Erro ao salvar teste. Tente novamente.", "danger")
+    if safe_commit():
+        flash(f'Teste para "{equipamento.serial}" salvo com sucesso!', "success")
     else:
-        flash(f'Teste para o equipamento "{equipamento.serial}" salvo com sucesso!', "success")
+        flash("Erro ao salvar teste.", "danger")
     return redirect(url_for("index"))
 
 
@@ -311,6 +308,10 @@ def pesquisar():
     base_query = Equipamento.query
     query_com_filtros = get_filtered_equipamentos_query(base_query)
     resultados = query_com_filtros.order_by(Equipamento.id.desc()).all()
+    
+    if current_user.role == 'agendamento':
+        return render_template("agendamento_index.html", equipamentos=resultados)
+        
     return render_template(
         "pesquisa.html",
         equipamentos=resultados,
@@ -325,7 +326,7 @@ def pesquisar():
 def historico(equip_id: int):
     equipamento = Equipamento.query.get_or_404(equip_id)
     testes_ordenados = sorted(equipamento.testes, key=lambda t: t.data_teste)
-    historico_processado, data_anterior = [], equipamento.data_cadastro or get_brasil_datetime()
+    historico_processado, data_anterior = [], equipamento.data_cadastro
 
     for teste in testes_ordenados:
         duracao = teste.data_teste - data_anterior
@@ -338,12 +339,13 @@ def historico(equip_id: int):
 @app.route("/delete/<int:id>", methods=["POST"])
 @login_required
 def delete(id: int):
+    if current_user.role == 'agendamento': abort(403)
     equipamento = Equipamento.query.get_or_404(id)
     db.session.delete(equipamento)
-    if not safe_commit():
-        flash("Erro ao deletar equipamento. Tente novamente.", "danger")
-    else:
+    if safe_commit():
         flash("Equipamento e histórico foram deletados.", "success")
+    else:
+        flash("Erro ao deletar equipamento.", "danger")
     return redirect(url_for("pesquisar"))
 
 
@@ -363,7 +365,7 @@ def manage_users():
 def add_user():
     username = (request.form.get("username") or "").strip()
     password = request.form.get("password", "")
-    role = request.form.get("role", "user")
+    role = request.form.get("role", "suporte")
 
     if not username or not password:
         flash("Nome de usuário e senha são obrigatórios.", "danger")
@@ -376,10 +378,10 @@ def add_user():
     novo = User(username=username, role=role)
     novo.set_password(password)
     db.session.add(novo)
-    if not safe_commit():
-        flash("Erro ao criar usuário. Tente novamente.", "danger")
-    else:
+    if safe_commit():
         flash(f'Usuário "{username}" criado com sucesso.', "success")
+    else:
+        flash("Erro ao criar usuário.", "danger")
     return redirect(url_for("manage_users"))
 
 @app.route("/admin/users/delete/<int:user_id>", methods=["POST"])
@@ -387,16 +389,37 @@ def add_user():
 @admin_required
 def delete_user(user_id: int):
     user_to_delete = User.query.get_or_404(user_id)
-    if user_to_delete.is_admin:
+    if user_to_delete.role == 'admin':
         flash("Não é possível deletar o usuário administrador.", "danger")
         return redirect(url_for("manage_users"))
 
     db.session.delete(user_to_delete)
-    if not safe_commit():
-        flash("Erro ao deletar usuário. Tente novamente.", "danger")
-    else:
+    if safe_commit():
         flash("Usuário deletado com sucesso.", "success")
+    else:
+        flash("Erro ao deletar usuário.", "danger")
     return redirect(url_for("manage_users"))
+
+@app.route('/admin/users/reset_password/<int:user_id>', methods=['POST'])
+@login_required
+@admin_required
+def reset_user_password(user_id: int):
+    user_to_reset = User.query.get_or_404(user_id)
+    new_password = request.form.get('new_password')
+
+    if user_to_reset.role == 'admin':
+        flash('Não é possível resetar a senha do usuário administrador.', 'danger')
+        return redirect(url_for('manage_users'))
+    if not new_password:
+        flash('A nova senha não pode estar em branco.', 'danger')
+        return redirect(url_for('manage_users'))
+
+    user_to_reset.set_password(new_password)
+    if safe_commit():
+        flash(f'Senha do usuário "{user_to_reset.username}" foi resetada com sucesso.', 'success')
+    else:
+        flash('Erro ao resetar a senha.', 'danger')
+    return redirect(url_for('manage_users'))
 
 
 # -------------------------
@@ -420,7 +443,7 @@ def export_pesquisa_pdf():
 def export_historico_pdf(equip_id: int):
     equipamento = Equipamento.query.get_or_404(equip_id)
     testes_ordenados = sorted(equipamento.testes, key=lambda t: t.data_teste)
-    historico_processado, data_anterior = [], equipamento.data_cadastro or get_brasil_datetime()
+    historico_processado, data_anterior = [], equipamento.data_cadastro
 
     for teste in testes_ordenados:
         duracao = teste.data_teste - data_anterior
@@ -457,12 +480,12 @@ def create_admin_command():
         print("ℹ️ Usuário 'admin' já existe.")
         return
     admin_user = User(username="admin", role="admin")
-    admin_user.set_password("admin")
+    admin_user.set_password("105391@Lu")
     db.session.add(admin_user)
-    if not safe_commit():
-        print("❌ Erro ao criar usuário administrador.")
+    if safe_commit():
+        print("✅ Usuário 'admin' criado com a senha segura.")
     else:
-        print("✅ Usuário 'admin' criado com a senha 'admin'.")
+        print("❌ Erro ao criar usuário administrador.")
 
 
 # -------------------------
@@ -480,3 +503,7 @@ def not_found_error(error):
 def internal_error(error):
     db.session.rollback()
     return render_template("500.html"), 500
+
+if __name__ == "__main__":
+    app.run(debug=True)
+

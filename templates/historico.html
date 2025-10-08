@@ -7,23 +7,16 @@
     <style>
         :root {
             --cor-primaria: #007bff;
-            --cor-primaria-escura: #0056b3;
             --cor-sucesso: #28a745;
-            --cor-sucesso-escura: #218838;
             --cor-perigo: #dc3545;
-            --cor-perigo-escura: #c82333;
             --cor-aviso: #ffc107;
-            --cor-aviso-escura: #e0a800;
             --cor-info: #17a2b8;
-            --cor-info-escura: #138496;
             --cor-pdf: #B30B00;
-            --cor-pdf-escura: #8a0900;
             --cor-fundo: #f8f9fa;
             --cor-borda: #dee2e6;
             --cor-texto: #343a40;
             --cor-texto-secundario: #6c757d;
             --sombra: 0 2px 4px rgba(0,0,0,0.1);
-            --sombra-foco: 0 0 0 3px rgba(0, 123, 255, 0.25);
         }
         
         * {
@@ -92,11 +85,6 @@
             color: white;
         }
         
-        .nav-link:active,
-        .btn:active:not(:disabled) {
-            transform: translateY(0);
-        }
-        
         .nav-link-admin { 
             background-color: var(--cor-info); 
         }
@@ -107,10 +95,6 @@
         
         .btn-pdf { 
             background-color: var(--cor-pdf); 
-        }
-        
-        .btn-pdf:hover {
-            background-color: var(--cor-pdf-escura);
         }
         
         .info-header { 
@@ -193,7 +177,9 @@
         }
         
         .status-badge {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
             padding: 4px 8px;
             border-radius: 12px;
             font-size: 0.8rem;
@@ -205,52 +191,27 @@
         .status-aprovado { 
             background-color: rgba(40, 167, 69, 0.1);
             color: var(--cor-sucesso);
-            border: 1px solid rgba(40, 167, 69, 0.3);
         }
         
         .status-reprovado { 
             background-color: rgba(220, 53, 69, 0.1);
             color: var(--cor-perigo);
-            border: 1px solid rgba(220, 53, 69, 0.3);
         }
         
         .status-aguardando { 
             background-color: rgba(255, 193, 7, 0.1);
             color: var(--cor-aviso);
-            border: 1px solid rgba(255, 193, 7, 0.3);
-        }
-        
-        .tempo-campo {
-            font-family: 'Courier New', monospace;
-            font-weight: 600;
-            color: var(--cor-info);
-            background: rgba(23, 162, 184, 0.1);
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.85rem;
         }
         
         .empty-state {
             text-align: center;
             padding: 3em;
             color: var(--cor-texto-secundario);
-            font-style: italic;
         }
         
         .teste-detalhes {
             font-size: 0.9rem;
             color: var(--cor-texto-secundario);
-        }
-        
-        .velocidade-badge, .sinal-badge {
-            display: inline-block;
-            padding: 3px 6px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            background: var(--cor-fundo);
-            color: var(--cor-texto);
-            margin: 2px 0;
         }
         
         .observacoes {
@@ -259,119 +220,20 @@
             line-height: 1.4;
         }
         
-        .stats-summary {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-bottom: 2em;
-            background: var(--cor-fundo);
-            padding: 20px;
-            border-radius: 8px;
-        }
-        
-        .stat-item {
-            text-align: center;
-            padding: 15px;
-            background: white;
-            border-radius: 6px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        
-        .stat-number {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--cor-primaria);
-            display: block;
-        }
-        
-        .stat-label {
-            font-size: 0.8rem;
-            color: var(--cor-texto-secundario);
-            text-transform: uppercase;
-            font-weight: 600;
-        }
-        
         @media (max-width: 768px) {
             .page-container { 
                 margin: 1em auto; 
                 padding: 0 0.5em;
             }
-            
-            .container {
-                padding: 15px;
-            }
-            
-            nav {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            
-            .nav-link-group {
-                justify-content: center;
-                margin-bottom: 10px;
-            }
-            
-            .info-header {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            .btn-pdf {
-                width: 100%;
-                margin-top: 15px;
-            }
-            
-            .equipamento-info {
-                grid-template-columns: 1fr;
-            }
-            
-            .stats-summary {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            table {
-                display: block;
-                overflow-x: auto;
-                white-space: nowrap;
-            }
-            
-            th, td {
-                padding: 8px;
-                font-size: 0.85rem;
-            }
-            
-            .observacoes {
-                max-width: 150px;
-                white-space: normal;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .page-container {
-                margin: 0.5em auto;
-            }
-            
-            h1 {
-                font-size: 1.4rem;
-            }
-            
-            .stats-summary {
-                grid-template-columns: 1fr;
-            }
-            
-            th, td {
-                padding: 6px;
-                font-size: 0.8rem;
-            }
-            
-            .stat-number {
-                font-size: 1.5rem;
-            }
-        }
-        
-        .loading {
-            opacity: 0.6;
-            pointer-events: none;
+            .container { padding: 15px; }
+            nav { flex-direction: column; align-items: stretch; }
+            .nav-link-group { justify-content: center; margin-bottom: 10px; }
+            .info-header { flex-direction: column; text-align: center; }
+            .btn-pdf { width: 100%; margin-top: 15px; }
+            .equipamento-info { grid-template-columns: 1fr; }
+            table { display: block; overflow-x: auto; white-space: nowrap; }
+            th, td { padding: 8px; font-size: 0.85rem; }
+            .observacoes { max-width: 150px; white-space: normal; }
         }
     </style>
 </head>
@@ -396,7 +258,7 @@
                     <h1>📊 Histórico de Testes</h1>
                     <div class="equipamento-info">
                         <div class="info-item">
-                            <div class="info-label">Número de Série</div>
+                            <div class="info-label">Número de Série (MAC)</div>
                             <div class="info-value">{{ equipamento.serial }}</div>
                         </div>
                         <div class="info-item">
@@ -437,47 +299,16 @@
             </header>
 
             {% if historico %}
-            <div class="stats-summary">
-                <div class="stat-item">
-                    <span class="stat-number">{{ historico|length }}</span>
-                    <span class="stat-label">Total de Testes</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-number">
-                        {{ historico|selectattr("teste.status", "equalto", "Aprovado")|list|length }}
-                    </span>
-                    <span class="stat-label">Testes Aprovados</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-number">
-                        {{ historico|selectattr("teste.status", "equalto", "Reprovado")|list|length }}
-                    </span>
-                    <span class="stat-label">Testes Reprovados</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-number">
-                        {% if historico|length > 1 %}
-                            {{ historico[-1].tempo_em_campo }}
-                        {% else %}
-                            -
-                        {% endif %}
-                    </span>
-                    <span class="stat-label">Tempo Total em Campo</span>
-                </div>
-            </div>
-            {% endif %}
-
-            {% if historico %}
             <div class="table-responsive">
                 <table aria-label="Histórico de testes do equipamento">
                     <thead>
                         <tr>
-                            <th scope="col">📅 Data/Hora</th>
-                            <th scope="col">🎯 Resultado</th>
-                            <th scope="col">⏱️ Tempo em Campo</th>
-                            <th scope="col">🚀 Velocidade</th>
-                            <th scope="col">📶 Sinal dBm</th>
-                            <th scope="col">📝 Observações</th>
+                            <th scope="col">Data/Hora</th>
+                            <th scope="col">Testado por</th>
+                            <th scope="col">Resultado</th>
+                            <th scope="col">Velocidade</th>
+                            <th scope="col">Sinal dBm</th>
+                            <th scope="col">Observações</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -488,45 +319,18 @@
                                 <br>
                                 <small class="teste-detalhes">{{ item.teste.data_teste.strftime('%H:%M') }}</small>
                             </td>
+                            <td>{{ item.teste.tester.username }}</td>
                             <td>
-                                <span class="status-badge status-{{ item.teste.status.lower() }}"
-                                      aria-label="Resultado: {{ item.teste.status }}">
+                                <span class="status-badge status-{{ item.teste.status.lower() }}">
                                     {% if item.teste.status == "Aprovado" %}✅
                                     {% elif item.teste.status == "Reprovado" %}❌
                                     {% else %}⏳{% endif %}
                                     {{ item.teste.status }}
                                 </span>
                             </td>
-                            <td>
-                                <span class="tempo-campo" title="Tempo desde o teste anterior">
-                                    {{ item.tempo_em_campo }}
-                                </span>
-                            </td>
-                            <td>
-                                {% if item.teste.velocidade_teste %}
-                                    <span class="velocidade-badge">
-                                        ⚡ {{ item.teste.velocidade_teste }} Mbps
-                                    </span>
-                                {% else %}
-                                    <span class="teste-detalhes">N/A</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if item.teste.sinal_dbm %}
-                                    <span class="sinal-badge">
-                                        📡 {{ item.teste.sinal_dbm }} dBm
-                                    </span>
-                                {% else %}
-                                    <span class="teste-detalhes">N/A</span>
-                                {% endif %}
-                            </td>
-                            <td class="observacoes">
-                                {% if item.teste.observacoes %}
-                                    {{ item.teste.observacoes }}
-                                {% else %}
-                                    <span class="teste-detalhes">-</span>
-                                {% endif %}
-                            </td>
+                            <td class="teste-detalhes">{{ item.teste.velocidade_teste or 'N/A' }}</td>
+                            <td class="teste-detalhes">{{ item.teste.sinal_dbm or 'N/A' }}</td>
+                            <td class="observacoes">{{ item.teste.observacoes or '-' }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -545,80 +349,6 @@
             {% endif %}
         </section>
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Adicionar funcionalidade de ordenação por coluna (opcional)
-            const table = document.querySelector('table');
-            const headers = table.querySelectorAll('th');
-            
-            headers.forEach((header, index) => {
-                header.style.cursor = 'pointer';
-                header.setAttribute('title', 'Clique para ordenar');
-                
-                header.addEventListener('click', function() {
-                    sortTable(index);
-                });
-            });
-            
-            function sortTable(columnIndex) {
-                const tbody = table.querySelector('tbody');
-                const rows = Array.from(tbody.querySelectorAll('tr'));
-                
-                const isNumeric = columnIndex === 3 || columnIndex === 4; // Velocidade e Sinal
-                const isDate = columnIndex === 0; // Data
-                
-                rows.sort((a, b) => {
-                    let aValue = a.cells[columnIndex].textContent.trim();
-                    let bValue = b.cells[columnIndex].textContent.trim();
-                    
-                    if (isDate) {
-                        // Ordenação por data (formato DD/MM/YYYY)
-                        const [dayA, monthA, yearA] = aValue.split('\n')[0].split('/');
-                        const [dayB, monthB, yearB] = bValue.split('\n')[0].split('/');
-                        aValue = new Date(`${yearA}-${monthA}-${dayA}`);
-                        bValue = new Date(`${yearB}-${monthB}-${dayB}`);
-                    } else if (isNumeric) {
-                        // Extrair números para ordenação
-                        aValue = parseFloat(aValue.replace(/[^\d.-]/g, '')) || 0;
-                        bValue = parseFloat(bValue.replace(/[^\d.-]/g, '')) || 0;
-                    }
-                    
-                    if (aValue < bValue) return -1;
-                    if (aValue > bValue) return 1;
-                    return 0;
-                });
-                
-                // Remover linhas existentes
-                while (tbody.firstChild) {
-                    tbody.removeChild(tbody.firstChild);
-                }
-                
-                // Adicionar linhas ordenadas
-                rows.forEach(row => tbody.appendChild(row));
-            }
-            
-            // Adicionar tooltips para tempos em campo
-            const tempoCells = document.querySelectorAll('.tempo-campo');
-            tempoCells.forEach(cell => {
-                cell.style.cursor = 'help';
-            });
-            
-            // Feedback visual para o botão PDF
-            const pdfBtn = document.querySelector('.btn-pdf');
-            if (pdfBtn) {
-                pdfBtn.addEventListener('click', function() {
-                    this.classList.add('loading');
-                    this.innerHTML = '⏳ Gerando PDF...';
-                    
-                    // Restaurar após 5 segundos (fallback)
-                    setTimeout(() => {
-                        this.classList.remove('loading');
-                        this.innerHTML = '📄 Exportar PDF';
-                    }, 5000);
-                });
-            }
-        });
-    </script>
 </body>
 </html>
+

@@ -1,59 +1,159 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerenciar Usuários</title>
     <style>
         :root {
-            --cor-primaria: #007bff;
+            --cor-laranja-blz: #f15a24;
+            --cor-amarelo-blz: #fdb913;
+            --gradiente-blz: linear-gradient(90deg, var(--cor-amarelo-blz), var(--cor-laranja-blz));
+            
+            /* Tema Claro */
+            --cor-fundo: #f0f2f5;
+            --cor-fundo-card: #ffffff;
+            --cor-texto-principal: #212529;
+            --cor-texto-secundario: #6c757d;
+            --cor-borda: #dee2e6;
+            --sombra: 0 4px 25px rgba(0, 0, 0, 0.08);
+
+            /* Cores de Ação */
             --cor-sucesso: #28a745;
             --cor-perigo: #dc3545;
-            --cor-aviso: #ffc107;
             --cor-info: #17a2b8;
-            --cor-fundo: #f8f9fa;
-            --cor-borda: #dee2e6;
+            --cor-aviso: #ffc107;
         }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; background-color: var(--cor-fundo); }
-        .page-container { max-width: 900px; margin: 2em auto; padding: 0 1em; }
-        .container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 2em; }
-        nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2em; flex-wrap: wrap; gap: 10px; }
-        nav a { text-decoration: none; color: white; padding: 10px 15px; border-radius: 5px; font-weight: 500; }
-        .nav-link { background-color: var(--cor-primaria); }
+
+        [data-theme="dark"] {
+            --cor-fundo: #121212;
+            --cor-fundo-card: #1e1e1e;
+            --cor-texto-principal: #e0e0e0;
+            --cor-texto-secundario: #888888;
+            --cor-borda: #444444;
+        }
+        
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding-top: 80px; /* Espaço para a barra superior fixa */
+            background-color: var(--cor-fundo);
+            color: var(--cor-texto-principal);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background-color: var(--cor-fundo-card);
+            box-shadow: var(--sombra);
+            z-index: 1000;
+            transition: background-color 0.3s;
+        }
+
+        .top-bar-logo { display: flex; align-items: center; gap: 15px; }
+        .top-bar-logo img { height: 40px; }
+        .top-bar-logo h1 { font-size: 1.2rem; font-weight: 600; margin: 0; color: var(--cor-texto-principal); }
+
+        .top-bar-nav { display: flex; align-items: center; gap: 15px; }
+        .nav-link, .btn { 
+            text-decoration: none; color: white; padding: 8px 12px; border-radius: 5px; 
+            font-weight: 500; font-size: 0.9rem; transition: all 0.2s ease; border: none; cursor: pointer;
+        }
+        .nav-link:hover, .btn:hover { transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .link-bancada { background-color: var(--cor-primaria, #007bff); }
+        .link-pesquisar { background-color: var(--cor-sucesso); }
         .logout-link { background-color: var(--cor-perigo); }
-        nav a:hover { opacity: 0.9; }
-        .flash-messages { list-style-type: none; padding: 0; margin-bottom: 20px; }
-        .flash-messages li { padding: 15px; border-radius: 4px; margin-bottom: 10px; font-weight: 500; }
+
+        .page-container { max-width: 1000px; margin: 2em auto; padding: 0 1em; }
+        .card { background-color: var(--cor-fundo-card); padding: 25px; border-radius: 12px; box-shadow: var(--sombra); margin-bottom: 2em; transition: background-color 0.3s; }
+        
+        h1, h2 { 
+            color: var(--cor-texto-principal); 
+            border-bottom: 2px solid var(--cor-borda); 
+            padding-bottom: 15px; 
+            margin-top: 0;
+            font-size: 1.5rem;
+        }
+
+        .form-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 15px; }
+        .form-group { flex: 1 1 180px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; color: var(--cor-texto-secundario); }
+        .form-group input, .form-group select {
+            width: 100%; padding: 10px; border-radius: 5px; border: 1px solid var(--cor-borda);
+            background-color: var(--cor-fundo); color: var(--cor-texto-principal);
+            font-size: 0.95rem;
+        }
+        
+        .btn-submit { 
+            padding: 10px 20px; background: var(--gradiente-blz); color: white; 
+            border-radius: 5px; font-weight: 600;
+        }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; border-bottom: 1px solid var(--cor-borda); text-align: left; vertical-align: middle; font-size: 0.9rem; }
+        th { background-color: var(--cor-fundo); font-weight: 600; text-transform: uppercase; font-size: 0.8rem;}
+        tbody tr:hover { background-color: rgba(0, 123, 255, 0.05); }
+        [data-theme="dark"] tbody tr:hover { background-color: rgba(255, 255, 255, 0.05); }
+
+        .flash-messages { list-style-type: none; padding: 0; margin-bottom: 25px; }
+        .flash-messages li { padding: 12px 15px; border-radius: 6px; font-weight: 500; }
         .flash-danger { background-color: #f8d7da; color: #721c24; }
         .flash-success { background-color: #d4edda; color: #155724; }
         .flash-warning { background-color: #fff3cd; color: #856404; }
-        .form-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 2em; }
-        input, select { padding: 8px; border-radius: 4px; border: 1px solid var(--cor-borda); flex-grow: 1; }
-        button { padding: 8px 15px; border: none; background-color: var(--cor-primaria); color: white; border-radius: 4px; cursor: pointer; font-weight: 500; }
-        button:hover { opacity: 0.9; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; border-bottom: 1px solid var(--cor-borda); text-align: left; vertical-align: middle; }
-        th { background-color: var(--cor-fundo); }
-        h1, h2 { color: #343a40; border-bottom: 2px solid var(--cor-primaria); padding-bottom: 10px; }
+        
+        .actions-cell { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .actions-cell form { margin: 0; display: flex; gap: 10px; align-items: center; }
         .btn-delete { background-color: var(--cor-perigo); }
-        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
+        .btn-reset { background-color: var(--cor-aviso); color: #212529; }
 
+        .theme-switch { display: flex; align-items: center; gap: 10px; color: var(--cor-texto-secundario); }
+        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background: var(--gradiente-blz); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        @media (max-width: 992px) { .top-bar-logo h1 { display: none; } }
         @media (max-width: 768px) {
-            .form-row { flex-direction: column; align-items: stretch; }
-            input, select, button { width: 100%; margin-right: 0; margin-bottom: 10px; box-sizing: border-box; }
+            .form-row, .actions-cell { flex-direction: column; align-items: stretch; }
         }
     </style>
 </head>
 <body>
-    <div class="page-container">
-        <section class="container">
-            <nav>
-                <a href="{{ url_for('index') }}" class="nav-link">← Voltar para a Bancada</a>
-                {% if current_user.is_authenticated %}
-                    <a href="{{ url_for('logout') }}" class="logout-link">Sair</a>
-                {% endif %}
-            </nav>
-            <h1>Gerenciamento de Usuários</h1>
+
+    <header class="top-bar">
+        <div class="top-bar-logo">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Logotipo da Empresa">
+            <h1>Controle de Equipamentos</h1>
+        </div>
+        <div class="top-bar-nav">
+            <a href="{{ url_for('index') }}" class="nav-link link-bancada">Bancada</a>
+            <a href="{{ url_for('pesquisar') }}" class="nav-link link-pesquisar">Pesquisar</a>
+            <a href="{{ url_for('logout') }}" class="nav-link link-logout">Sair ({{ current_user.username }})</a>
+            <div class="theme-switch">
+                <span>☀️</span>
+                <label class="switch">
+                    <input type="checkbox" id="theme-toggle">
+                    <span class="slider"></span>
+                </label>
+                <span>🌙</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-container">
+        <section class="card">
+            <h2>Gerenciamento de Usuários</h2>
 
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
@@ -65,30 +165,37 @@
                 {% endif %}
             {% endwith %}
 
-            <h2>Adicionar Novo Usuário</h2>
-            <form action="{{ url_for('add_user') }}" method="POST" class="form-row">
-                <label for="username" class="sr-only">Nome de usuário</label>
-                <input type="text" id="username" name="username" placeholder="Nome de usuário" required>
-                
-                <label for="password" class="sr-only">Senha</label>
-                <input type="password" id="password" name="password" placeholder="Senha" required>
+            <div class="form-section" style="margin-bottom: 2em;">
+                <h3>Adicionar Novo Usuário</h3>
+                <form action="{{ url_for('add_user') }}" method="POST" class="form-row">
+                    <div class="form-group">
+                        <label for="username">Nome de usuário</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Senha</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="role">Função</label>
+                        <select id="role" name="role">
+                            <option value="suporte" selected>Suporte</option>
+                            <option value="agendamento">Agendamento</option>
+                            <option value="master">Master</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-submit">Adicionar</button>
+                </form>
+            </div>
 
-                <label for="role" class="sr-only">Função</label>
-                <select id="role" name="role">
-                    <option value="user" selected>Usuário Padrão</option>
-                    <option value="admin">Administrador</option>
-                </select>
-                <button type="submit">Adicionar Usuário</button>
-            </form>
-
-            <h2>Usuários Cadastrados</h2>
+            <h3>Usuários Cadastrados</h3>
             <table>
                 <thead>
                     <tr>
                         <th>ID</th>
                         <th>Nome de Usuário</th>
                         <th>Função</th>
-                        <th>Ação</th>
+                        <th>Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -97,14 +204,17 @@
                         <td>{{ user.id }}</td>
                         <td>{{ user.username }}</td>
                         <td>{{ user.role }}</td>
-                        <td>
-                            {% if not user.is_admin %}
-                            <!-- CORREÇÃO: Adicionado style="margin: 0;" para garantir alinhamento na célula da tabela -->
-                            <form action="{{ url_for('delete_user', user_id=user.id) }}" method="POST" onsubmit="return confirm('Tem certeza que deseja deletar este usuário?');" style="margin: 0;">
-                                <button type="submit" class="btn-delete">Deletar</button>
-                            </form>
+                        <td class="actions-cell">
+                            {% if user.role != 'master' %}
+                                <form action="{{ url_for('reset_user_password', user_id=user.id) }}" method="POST">
+                                    <input type="password" name="new_password" placeholder="Nova senha..." required>
+                                    <button type="submit" class="btn btn-reset">Resetar Senha</button>
+                                </form>
+                                <form action="{{ url_for('delete_user', user_id=user.id) }}" method="POST" onsubmit="return confirm('Tem certeza?');">
+                                    <button type="submit" class="btn btn-delete">Deletar</button>
+                                </form>
                             {% else %}
-                                <span>(Master Admin)</span>
+                                <span>(Usuário Master)</span>
                             {% endif %}
                         </td>
                     </tr>
@@ -112,7 +222,24 @@
                 </tbody>
             </table>
         </section>
-    </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Lógica do Toggle de Tema
+            const themeToggle = document.getElementById('theme-toggle');
+            const currentTheme = localStorage.getItem('theme');
+            if (currentTheme) {
+                document.documentElement.setAttribute('data-theme', currentTheme);
+                if (currentTheme === 'dark') themeToggle.checked = true;
+            }
+            themeToggle.addEventListener('change', function() {
+                const theme = this.checked ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+            });
+        });
+    </script>
 </body>
 </html>
 

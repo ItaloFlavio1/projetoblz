@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <title>Relatório de Pesquisa</title>
+    <title>Relatório de Histórico - {{ equipamento.serial }}</title>
     <meta charset="utf-8">
     <style>
         :root {
@@ -9,57 +9,97 @@
             --cor-borda: #dee2e6;
             --cor-texto-principal: #212529;
             --cor-texto-secundario: #6c757d;
+            --cor-sucesso: #28a745;
+            --cor-perigo: #dc3545;
         }
         @page { size: A4; margin: 1.5cm; }
-        body { font-family: sans-serif; font-size: 10pt; color: var(--cor-texto-principal); }
-        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
-        .footer { text-align: center; margin-top: 20px; font-size: 8pt; color: var(--cor-texto-secundario); position: fixed; bottom: -30px; width: 100%;}
-        h1, h2 { margin: 5px 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 9pt; color: var(--cor-texto-principal); }
+        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 15px; }
+        .footer { text-align: center; margin-top: 20px; font-size: 8pt; color: var(--cor-texto-secundario); position: fixed; bottom: -40px; width: 100%;}
+        h1 { font-size: 1.8em; margin: 0; }
+        h2 { font-size: 1.1em; font-weight: 400; color: var(--cor-texto-secundario); margin: 0; }
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px 20px;
+            margin-bottom: 25px;
+            background-color: var(--cor-fundo);
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .info-item p { margin: 0; }
+        .info-item strong { color: var(--cor-texto-secundario); }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid var(--cor-borda); padding: 8px; text-align: left; word-break: break-word; }
         th {
             background-color: var(--cor-fundo);
             text-transform: uppercase;
+            font-size: 0.8em;
         }
-        tbody tr:nth-child(even) {
-            background-color: var(--cor-fundo);
+        tbody tr:nth-child(even) { background-color: var(--cor-fundo); }
+        .status-badge {
+            display: inline-block;
+            padding: 3px 7px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-align: center;
         }
+        .status-aprovado { background-color: rgba(40, 167, 69, 0.1); color: var(--cor-sucesso); }
+        .status-reprovado { background-color: rgba(220, 53, 69, 0.1); color: var(--cor-perigo); }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h2>BLZ INTERNET LTDA</h2>
-        <h1>Relatório de Pesquisa de Equipamentos</h1>
-    </div>
+    <header class="header">
+        <h1>Relatório de Histórico</h1>
+        <h2>Controle de Equipamentos Resetados</h2>
+    </header>
 
-    <table>
-        <thead>
-            <tr>
-                <th>N° de Série</th>
-                <th>Tipo/Modelo</th>
-                <th>Status Atual</th>
-                <th>Nº de Testes</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for eq in equipamentos %}
-            <tr>
-                <td>{{ eq.serial }}</td>
-                <td>{{ eq.tipo }} / {{ eq.modelo }}</td>
-                <td>{{ eq.status_atual }}</td>
-                <td>{{ eq.testes|length }}</td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="4">Nenhum resultado encontrado para os filtros aplicados.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <main>
+        <div class="info-grid">
+            <div class="info-item"><p><strong>MAC do Equipamento:</strong> {{ equipamento.serial }}</p></div>
+            <div class="info-item"><p><strong>Modelo:</strong> {{ equipamento.tipo }} / {{ equipamento.modelo }}</p></div>
+            <div class="info-item"><p><strong>Data de Cadastro:</strong> {{ equipamento.data_cadastro.strftime('%d/%m/%Y') }}</p></div>
+            <div class="info-item"><p><strong>Status Atual:</strong> {{ equipamento.status_atual }}</p></div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Data do Teste</th>
+                    <th>Testado por</th>
+                    <th>Resultado</th>
+                    <th>Velocidade</th>
+                    <th>Sinal dBm</th>
+                    <th>Observações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for teste in historico %}
+                <tr>
+                    <td>{{ teste.data_teste.strftime('%d/%m/%Y %H:%M') }}</td>
+                    <td>{{ teste.tester.username }}</td>
+                    <td>
+                        <span class="status-badge status-{{ teste.status.lower() }}">
+                            {{ teste.status }}
+                        </span>
+                    </td>
+                    <td>{{ teste.velocidade_teste or 'N/A' }}</td>
+                    <td>{{ teste.sinal_dbm or 'N/A' }}</td>
+                    <td>{{ teste.observacoes or '-' }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" style="text-align: center;">Nenhum teste registado para este equipamento.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </main>
     
-    <div class="footer">
+    <footer class="footer">
         Relatório gerado em {{ now.strftime('%d/%m/%Y às %H:%M:%S') }}
-    </div>
+    </footer>
 </body>
 </html>
 

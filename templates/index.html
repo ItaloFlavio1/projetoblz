@@ -1,142 +1,225 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bancada de Testes</title>
+    <title>Bancada de Testes - Controle de Equipamentos</title>
     <style>
         :root {
-            --cor-primaria: #007bff;
+            --cor-laranja-blz: #f15a24;
+            --cor-amarelo-blz: #fdb913;
+            --gradiente-blz: linear-gradient(90deg, var(--cor-amarelo-blz), var(--cor-laranja-blz));
+            
+            /* Tema Claro */
+            --cor-fundo: #f0f2f5;
+            --cor-fundo-card: #ffffff;
+            --cor-texto-principal: #212529;
+            --cor-texto-secundario: #6c757d;
+            --cor-borda: #dee2e6;
+            --sombra: 0 4px 25px rgba(0, 0, 0, 0.08);
+
+            /* Cores de Ação */
             --cor-sucesso: #28a745;
             --cor-perigo: #dc3545;
-            --cor-aviso: #ffc107;
             --cor-info: #17a2b8;
-            --cor-fundo: #f8f9fa;
-            --cor-borda: #dee2e6;
+            --cor-aviso: #ffc107;
         }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; background-color: var(--cor-fundo); }
-        .page-container { max-width: 1200px; margin: 2em auto; padding: 0 1em; }
-        .container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 2em; }
-        nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2em; flex-wrap: wrap; gap: 10px;}
-        nav a { text-decoration: none; color: white; padding: 10px 15px; border-radius: 5px; font-weight: 500; }
-        .nav-link-group { display: flex; gap: 10px; flex-wrap: wrap; }
-        .nav-link { background-color: var(--cor-sucesso); }
-        .nav-link-admin { background-color: var(--cor-info); }
-        .logout-link { background-color: var(--cor-perigo); }
-        nav a:hover { opacity: 0.9; }
-        .flash-messages { list-style-type: none; padding: 0; margin-bottom: 20px; }
-        .flash-messages li { padding: 15px; border-radius: 4px; margin-bottom: 10px; font-weight: 500; }
+
+        [data-theme="dark"] {
+            --cor-fundo: #121212;
+            --cor-fundo-card: #1e1e1e;
+            --cor-texto-principal: #e0e0e0;
+            --cor-texto-secundario: #888888;
+            --cor-borda: #444444;
+        }
+        
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding-top: 80px; /* Espaço para a barra superior fixa */
+            background-color: var(--cor-fundo);
+            color: var(--cor-texto-principal);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background-color: var(--cor-fundo-card);
+            box-shadow: var(--sombra);
+            z-index: 1000;
+            transition: background-color 0.3s;
+        }
+
+        .top-bar-logo { display: flex; align-items: center; gap: 15px; }
+        .top-bar-logo img { height: 40px; }
+        .top-bar-logo h1 { font-size: 1.2rem; font-weight: 600; margin: 0; color: var(--cor-texto-principal); }
+
+        .top-bar-nav { display: flex; align-items: center; gap: 15px; }
+        .nav-link { 
+            text-decoration: none; color: white; padding: 8px 12px; border-radius: 5px; 
+            font-weight: 500; font-size: 0.9rem; transition: all 0.2s ease;
+        }
+        .nav-link:hover { transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .link-pesquisar { background-color: var(--cor-sucesso); }
+        .link-admin { background-color: var(--cor-info); }
+        .link-logout { background-color: var(--cor-perigo); }
+
+        .page-container { max-width: 1400px; margin: 2em auto; padding: 0 1em; }
+        .card { background-color: var(--cor-fundo-card); padding: 25px; border-radius: 12px; box-shadow: var(--sombra); margin-bottom: 2em; transition: background-color 0.3s; }
+        
+        h2 { 
+            color: var(--cor-texto-principal); 
+            border-bottom: 2px solid var(--cor-borda); 
+            padding-bottom: 15px; 
+            margin-top: 0;
+            font-size: 1.5rem;
+        }
+
+        .form-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 15px; }
+        .form-group { flex: 1 1 180px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; color: var(--cor-texto-secundario); }
+        .form-group input, .form-group select {
+            width: 100%; padding: 10px; border-radius: 5px; border: 1px solid var(--cor-borda);
+            background-color: var(--cor-fundo); color: var(--cor-texto-principal);
+            font-size: 0.95rem;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none; border-color: var(--cor-laranja-blz);
+            box-shadow: 0 0 0 3px rgba(241, 90, 36, 0.2);
+        }
+
+        .btn-submit { 
+            padding: 10px 20px; border: none; background: var(--gradiente-blz); color: white; 
+            border-radius: 5px; cursor: pointer; font-weight: 600;
+        }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; border-bottom: 1px solid var(--cor-borda); text-align: left; vertical-align: middle; font-size: 0.9rem; }
+        th { background-color: var(--cor-fundo); font-weight: 600; text-transform: uppercase; font-size: 0.8rem;}
+        tbody tr:hover { background-color: rgba(0, 123, 255, 0.05); }
+        [data-theme="dark"] tbody tr:hover { background-color: rgba(255, 255, 255, 0.05); }
+
+        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; }
+        .status-aprovado { background-color: rgba(40, 167, 69, 0.1); color: var(--cor-sucesso); }
+        .status-reprovado { background-color: rgba(220, 53, 69, 0.1); color: var(--cor-perigo); }
+        .status-aguardando { background-color: rgba(255, 193, 7, 0.1); color: var(--cor-aviso); }
+        
+        .flash-messages { list-style-type: none; padding: 0; margin-bottom: 25px; }
+        .flash-messages li { padding: 12px 15px; border-radius: 6px; font-weight: 500; }
         .flash-danger { background-color: #f8d7da; color: #721c24; }
         .flash-success { background-color: #d4edda; color: #155724; }
         .flash-info { background-color: #d1ecf1; color: #0c5460; }
-        input, select { padding: 8px; margin-right: 10px; border-radius: 4px; border: 1px solid var(--cor-borda); width: 140px; }
-        button { padding: 8px 15px; border: none; background-color: var(--cor-primaria); color: white; border-radius: 4px; cursor: pointer; font-weight: 500; }
-        button:hover { opacity: 0.9; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; border-bottom: 1px solid var(--cor-borda); text-align: left; vertical-align: middle; }
-        th { background-color: var(--cor-fundo); }
-        h1, h2 { color: #343a40; border-bottom: 2px solid var(--cor-primaria); padding-bottom: 10px; }
-        .status-Aprovado { color: var(--cor-sucesso); font-weight: bold; }
-        .status-Reprovado { color: var(--cor-perigo); font-weight: bold; }
-        .status-Aguardando { color: var(--cor-aviso); font-weight: bold; }
-        .status-icon { margin-right: 6px; }
-        .form-row, .actions-cell { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-        .tooltip { position: relative; display: inline-block; cursor: pointer; }
-        .tooltip .tooltip-text {
-            visibility: hidden; width: 220px; background-color: #333; color: #fff; text-align: left;
-            border-radius: 6px; padding: 10px; position: absolute; z-index: 1; bottom: 125%;
-            left: 50%; margin-left: -110px; opacity: 0; transition: opacity 0.3s;
-        }
-        .tooltip .tooltip-text::after {
-            content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px;
-            border-width: 5px; border-style: solid; border-color: #333 transparent transparent transparent;
-        }
-        .tooltip:hover .tooltip-text { visibility: visible; opacity: 1; }
-        .info-icon { font-size: 10px; color: #fff; background-color: #6c757d; border-radius: 50%; padding: 2px 6px; margin-left: 5px; }
-        .tooltip-text ul { list-style-type: none; padding: 0; margin: 0; }
-        .tooltip-text li { font-size: 0.9em; margin-bottom: 5px; }
-        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
         
-        /* Estilos para abas */
-        .tabs { display: flex; margin-bottom: 20px; border-bottom: 1px solid var(--cor-borda); }
-        .tab { padding: 10px 20px; cursor: pointer; border: 1px solid transparent; border-bottom: none; border-radius: 4px 4px 0 0; margin-right: 5px; }
-        .tab.active { background-color: white; border-color: var(--cor-borda); border-bottom: 1px solid white; margin-bottom: -1px; font-weight: bold; }
-        .tab-content { display: none; }
+        .tabs { display: flex; margin-bottom: -1px; border-bottom: 1px solid var(--cor-borda); }
+        .tab { padding: 10px 20px; cursor: pointer; border: 1px solid transparent; border-bottom: none; margin-bottom: -1px; }
+        .tab.active { border-color: var(--cor-borda); border-bottom: 1px solid var(--cor-fundo-card); background-color: var(--cor-fundo-card); font-weight: bold; border-radius: 6px 6px 0 0; }
+        .tab-content { display: none; padding: 20px; border: 1px solid var(--cor-borda); border-top: none; border-radius: 0 0 8px 8px; }
         .tab-content.active { display: block; }
         
+        .mac-link { color: var(--cor-laranja-blz); text-decoration: none; font-weight: bold; }
+        .mac-link:hover { text-decoration: underline; }
+        
+        .theme-switch { display: flex; align-items: center; gap: 10px; color: var(--cor-texto-secundario); }
+        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background: var(--gradiente-blz); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        @media (max-width: 992px) { .top-bar-logo h1 { display: none; } }
         @media (max-width: 768px) {
-            .form-row, .actions-cell { flex-direction: column; align-items: stretch; }
-            input, select, button { width: 100%; margin-right: 0; margin-bottom: 10px; box-sizing: border-box; }
-            .page-container { margin: 1em auto; }
-            h1, h2 { font-size: 1.5em; }
-            .tabs { flex-direction: column; }
-            .tab { margin-right: 0; margin-bottom: 5px; border-radius: 4px; }
+            .form-row { flex-direction: column; align-items: stretch; }
+            .form-group { flex-basis: auto; }
+            .page-container { margin: 1em auto; padding-top: 70px; }
+            h1, h2 { font-size: 1.5rem; }
+            table { display: block; overflow-x: auto; white-space: nowrap; }
+            .tabs { flex-direction: column; border-bottom: none; }
+            .tab { margin-right: 0; margin-bottom: 2px; border-radius: 4px; }
         }
     </style>
 </head>
 <body>
-    <div class="page-container">
-        <section class="container">
-            <nav>
-                <div class="nav-link-group">
-                    <a href="{{ url_for('pesquisar') }}" class="nav-link" aria-label="Ver ou pesquisar todos os equipamentos">Ver / Pesquisar Todos</a>
-                    {% if current_user.is_admin %}
-                        <a href="{{ url_for('manage_users') }}" class="nav-link-admin" aria-label="Gerenciar usuários">Gerenciar Usuários</a>
-                    {% endif %}
-                </div>
-                {% if current_user.is_authenticated %}
-                    <a href="{{ url_for('logout') }}" class="logout-link" aria-label="Sair do sistema">Sair</a>
-                {% endif %}
-            </nav>
-            <h1>Bancada de Testes</h1>
 
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    <ul class="flash-messages" aria-live="polite">
+    <header class="top-bar">
+        <div class="top-bar-logo">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Logotipo da Empresa">
+            <h1>Controle de Equipamentos</h1>
+        </div>
+        <div class="top-bar-nav">
+            <a href="{{ url_for('pesquisar') }}" class="nav-link link-pesquisar">Pesquisar</a>
+            {% if current_user.is_admin %}
+                <a href="{{ url_for('manage_users') }}" class="nav-link link-admin">Gerenciar Usuários</a>
+            {% endif %}
+            <a href="{{ url_for('logout') }}" class="nav-link link-logout">Sair ({{ current_user.username }})</a>
+            <div class="theme-switch">
+                <span>☀️</span>
+                <label class="switch">
+                    <input type="checkbox" id="theme-toggle">
+                    <span class="slider"></span>
+                </label>
+                <span>🌙</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-container">
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages-container" style="margin-bottom: 1.5em;">
+                    <ul class="flash-messages">
                     {% for category, message in messages %}
                         <li class="flash-{{ category }}">{{ message }}</li>
                     {% endfor %}
                     </ul>
-                {% endif %}
-            {% endwith %}
+                </div>
+            {% endif %}
+        {% endwith %}
 
-            <div class="form-section">
-                <h2>Cadastrar Novo Equipamento</h2>
-                <form action="{{ url_for('add_equipamento') }}" method="POST" class="form-row">
-                    <label for="tipo" class="sr-only">Tipo</label>
-                    <input type="text" id="tipo" name="tipo" placeholder="Tipo (ex: Roteador)" required>
-                    <label for="modelo" class="sr-only">Modelo</label>
-                    <input type="text" id="modelo" name="modelo" placeholder="Modelo (ex: Archer C60)" required>
-                    <label for="serial-input" class="sr-only">MAC</label>
-                    <input type="text" name="serial" id="serial-input" placeholder="Endereço MAC" required>
-                    <button type="submit">Cadastrar</button>
-                </form>
-                <p style="color: #666; font-size: 0.9em; margin-top: 5px;">
-                    <strong>Nota:</strong> Se o MAC já existir, o equipamento será carregado na aba "Equipamentos Existentes".
-                </p>
-            </div>
+        <section class="card">
+            <h2>Cadastrar ou Solicitar Reteste</h2>
+            <form action="{{ url_for('add_equipamento') }}" method="POST" class="form-row">
+                <div class="form-group">
+                    <label for="serial-input">MAC do Equipamento</label>
+                    <input type="text" name="serial" id="serial-input" placeholder="Obrigatório" required>
+                </div>
+                <div class="form-group">
+                    <label for="tipo">Tipo</label>
+                    <input type="text" id="tipo" name="tipo" placeholder="Apenas se for novo">
+                </div>
+                <div class="form-group">
+                    <label for="modelo">Modelo</label>
+                    <input type="text" id="modelo" name="modelo" placeholder="Apenas se for novo">
+                </div>
+                <button type="submit" class="btn-submit">Cadastrar / Solicitar</button>
+            </form>
+            <p style="color: var(--cor-texto-secundario); font-size: 0.85rem; margin-top: 10px;">
+                <strong>Nota:</strong> Se o MAC já existir, o equipamento será movido para "Aguardando Teste" para um novo re-teste.
+            </p>
         </section>
 
-        <section class="container">
+        <section class="card">
             <div class="tabs">
-                <div class="tab active" onclick="openTab('nao-testados')">Equipamentos Aguardando Teste ({{ equipamentos_nao_testados|length }})</div>
-                <div class="tab" onclick="openTab('testados')">Equipamentos com Histórico ({{ equipamentos_testados|length }})</div>
+                <div class="tab active" onclick="openTab(event, 'nao-testados')">Aguardando Teste ({{ equipamentos_nao_testados|length }})</div>
+                <div class="tab" onclick="openTab(event, 'testados')">Com Histórico (Visualização) ({{ equipamentos_testados|length }})</div>
             </div>
 
-            <!-- Aba 1: Equipamentos Aguardando Teste -->
             <div id="nao-testados" class="tab-content active">
-                <h2>Equipamentos Aguardando Teste</h2>
-                {% if equipamentos_nao_testados %}
+                <h3>Equipamentos para Teste / Re-teste</h3>
                 <table>
                     <thead>
                         <tr>
-                            <th>MAC</th>
-                            <th>Tipo/Modelo</th>
-                            <th>Status</th>
-                            <th>Velocidade (Mbps)</th>
-                            <th>Sinal (dBm)</th>
-                            <th>Observações</th>
-                            <th>Salvar Teste</th>
+                            <th>MAC</th><th>Tipo/Modelo</th><th>Velocidade (Mbps)</th><th>Sinal (dBm)</th><th>Observações</th><th>Resultado</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -145,145 +228,109 @@
                             <tr>
                                 <td><strong>{{ eq.serial }}</strong></td>
                                 <td>{{ eq.tipo }} / {{ eq.modelo }}</td>
-                                <td>
-                                    <span class="status-Aguardando"><span class="status-icon">⏳</span>{{ eq.status_atual }}</span>
-                                </td>
-                                <td><input type="number" step="0.1" name="velocidade_teste" placeholder="Ex: 95.5" aria-label="Velocidade em Mbps"></td>
-                                <td><input type="number" step="0.1" name="sinal_dbm" placeholder="Ex: -65.5" aria-label="Sinal em dBm"></td>
-                                <td><input type="text" name="observacoes" placeholder="Observações..." aria-label="Observações do teste"></td>
+                                <td><input type="number" step="0.1" name="velocidade_teste" placeholder="Ex: 95.5"></td>
+                                <td><input type="number" step="0.1" name="sinal_dbm" placeholder="Ex: -65.5"></td>
+                                <td><input type="text" name="observacoes" placeholder="Opcional..."></td>
                                 <td class="actions-cell">
-                                    <select name="status" required aria-label="Resultado do teste">
-                                        <option value="" disabled selected>Selecione...</option>
-                                        <option value="Aprovado">Aprovado</option>
-                                        <option value="Reprovado">Reprovado</option>
-                                    </select>
-                                    <button type="submit">Salvar Teste</button>
+                                    <select name="status" required><option value="" disabled selected>Selecione...</option><option value="Aprovado">Aprovado</option><option value="Reprovado">Reprovado</option></select>
+                                    <button type="submit" class="btn-submit">Salvar</button>
                                 </td>
                             </tr>
                         </form>
+                        {% else %}
+                        <tr><td colspan="6" style="text-align: center; padding: 20px;">Nenhum equipamento aguardando teste.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
-                {% else %}
-                <div style="text-align: center; padding: 40px; color: #666;">
-                    <p>Nenhum equipamento aguardando teste.</p>
-                    <p>Cadastre um novo equipamento ou adicione testes a equipamentos existentes.</p>
-                </div>
-                {% endif %}
             </div>
 
-            <!-- Aba 2: Equipamentos com Histórico -->
             <div id="testados" class="tab-content">
-                <h2>Equipamentos com Histórico de Testes</h2>
-                {% if equipamentos_testados %}
-                <table>
+                <h3>Histórico Recente (Apenas Visualização)</h3>
+                 <table>
                     <thead>
                         <tr>
                             <th>MAC</th>
                             <th>Tipo/Modelo</th>
                             <th>Status Atual</th>
                             <th>Último Teste</th>
-                            <th>Velocidade (Mbps)</th>
-                            <th>Sinal (dBm)</th>
+                            <th>Testado por</th>
+                            <th>Velocidade</th>
+                            <th>Sinal</th>
                             <th>Observações</th>
-                            <th>Novo Teste</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for eq in equipamentos_testados %}
-                        <form action="{{ url_for('add_test', equip_id=eq.id) }}" method="POST">
-                            <tr>
-                                <td><strong>{{ eq.serial }}</strong></td>
-                                <td>
-                                    {{ eq.tipo }} / {{ eq.modelo }}
-                                    {% if eq.testes %}
-                                    <div class="tooltip">
-                                        <span class="info-icon" aria-describedby="tooltip-{{ eq.id }}">i</span>
-                                        <span class="tooltip-text" id="tooltip-{{ eq.id }}">
-                                            <ul>
-                                                <strong>Histórico de Testes:</strong>
-                                                {% for teste in eq.testes[:5] %}
-                                                <li>{{ teste.data_teste.strftime('%d/%m/%y %H:%M') }}: {{ teste.status }}</li>
-                                                {% endfor %}
-                                            </ul>
-                                        </span>
-                                    </div>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if eq.status_atual.startswith("Aprovado") %}
-                                        <span class="status-Aprovado"><span class="status-icon">✔️</span>{{ eq.status_atual }}</span>
-                                    {% elif eq.status_atual.startswith("Reprovado") %}
-                                        <span class="status-Reprovado"><span class="status-icon">❌</span>{{ eq.status_atual }}</span>
-                                    {% else %}
-                                        <span class="status-Aguardando"><span class="status-icon">⏳</span>{{ eq.status_atual }}</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if eq.testes %}
-                                        {{ eq.testes[0].data_teste.strftime('%d/%m/%y %H:%M') }}
-                                    {% else %}
-                                        -
-                                    {% endif %}
-                                </td>
-                                <td><input type="number" step="0.1" name="velocidade_teste" placeholder="Ex: 1000" aria-label="Velocidade em Mbps"></td>
-                                <td><input type="number" step="0.1" name="sinal_dbm" placeholder="Ex: -24" aria-label="Sinal em dBm"></td>
-                                <td><input type="text" name="observacoes" placeholder="Observações..." aria-label="Observações do teste"></td>
-                                <td class="actions-cell">
-                                    <select name="status" required aria-label="Resultado do teste">
-                                        <option value="" disabled selected>Selecione...</option>
-                                        <option value="Aprovado">Aprovado</option>
-                                        <option value="Reprovado">Reprovado</option>
-                                    </select>
-                                    <button type="submit">Salvar</button>
-                                </td>
-                            </tr>
-                        </form>
+                        <tr>
+                            <td><a href="{{ url_for('historico', equip_id=eq.id) }}" class="mac-link" title="Ver histórico completo">{{ eq.serial }}</a></td>
+                            <td>{{ eq.tipo }} / {{ eq.modelo }}</td>
+                            <td>
+                                <span class="status-badge status-{{ eq.status_atual.lower().split(' ')[0] }}">
+                                    {% if "Aprovado" in eq.status_atual %}✅{% else %}❌{% endif %} {{ eq.status_atual }}
+                                </span>
+                            </td>
+                            <td>{{ eq.testes[0].data_teste.strftime('%d/%m/%y %H:%M') if eq.testes else 'N/A' }}</td>
+                            <td>{{ eq.testes[0].tester.username if eq.testes else 'N/A' }}</td>
+                            <td>{{ eq.testes[0].velocidade_teste or 'N/A' }}</td>
+                            <td>{{ eq.testes[0].sinal_dbm or 'N/A' }}</td>
+                            <td>{{ eq.testes[0].observacoes or 'N/A' }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="8" style="text-align: center; padding: 20px;">Nenhum equipamento com histórico para exibir.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
-                {% else %}
-                <div style="text-align: center; padding: 40px; color: #666;">
-                    <p>Nenhum equipamento com histórico de testes.</p>
-                    <p>Realize testes nos equipamentos para criar histórico.</p>
-                </div>
-                {% endif %}
             </div>
         </section>
-    </div>
+    </main>
+
     <script>
-        window.onload = function() {
+        document.addEventListener('DOMContentLoaded', function() {
+            // Foco automático
             document.getElementById('serial-input').focus();
-        };
-
-        // Função para alternar entre abas
-        function openTab(tabName) {
-            // Esconde todos os conteúdos de abas
-            var tabContents = document.getElementsByClassName('tab-content');
-            for (var i = 0; i < tabContents.length; i++) {
-                tabContents[i].classList.remove('active');
-            }
             
-            // Remove a classe active de todas as abas
-            var tabs = document.getElementsByClassName('tab');
-            for (var i = 0; i < tabs.length; i++) {
-                tabs[i].classList.remove('active');
+            // Lógica das Abas
+            const firstTab = document.querySelector('.tab');
+            if (firstTab) {
+                firstTab.click();
             }
-            
-            // Mostra a aba específica e marca como ativa
-            document.getElementById(tabName).classList.add('active');
-            event.currentTarget.classList.add('active');
-        }
 
-        // Permite enviar formulário com Enter em campos de teste
-        document.querySelectorAll("form").forEach(form => {
-            form.addEventListener("keypress", function(e) {
-                if (e.key === "Enter") {
-                    e.preventDefault();
-                    form.querySelector("button[type='submit']").click();
+            // Lógica do Toggle de Tema
+            const themeToggle = document.getElementById('theme-toggle');
+            const currentTheme = localStorage.getItem('theme');
+            if (currentTheme) {
+                document.documentElement.setAttribute('data-theme', currentTheme);
+                if (currentTheme === 'dark') {
+                    themeToggle.checked = true;
+                }
+            }
+            themeToggle.addEventListener('change', function() {
+                if (this.checked) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                    localStorage.setItem('theme', 'light');
                 }
             });
         });
+
+        function openTab(evt, tabName) {
+            let i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+                tabcontent[i].classList.remove("active");
+            }
+            tablinks = document.getElementsByClassName("tab");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove("active");
+            }
+            document.getElementById(tabName).style.display = "block";
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
     </script>
 </body>
 </html>
+
