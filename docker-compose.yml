@@ -1,14 +1,9 @@
-version: '3.8'
-
 services:
-  sistema:
-    image: python:3.11-slim
-    container_name: sistema-testes
-    working_dir: /app
-    volumes:
-      - .:/app
+  web:
+    build: .
+    container_name: sistema_testes_blz
     ports:
-      - "0.0.0.0:5000:5000"
-    command: >
-      sh -c "pip install flask flask-sqlalchemy flask-login werkzeug && python -c 'from app import app; app.run(host=\"0.0.0.0\", port=5000)'"
+      - "5000:5000"
+    volumes:
+      - ./instance:/app/instance
     restart: unless-stopped
